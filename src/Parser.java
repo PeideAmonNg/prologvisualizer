@@ -1,24 +1,117 @@
+import java.io.File;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.igormaznitsa.prologparser.PrologCharDataSource;
 import com.igormaznitsa.prologparser.PrologParser;
+import com.igormaznitsa.prologparser.terms.AbstractPrologTerm;
+import com.igormaznitsa.prologparser.terms.PrologAtom;
 import com.igormaznitsa.prologparser.terms.PrologStructure;
+import com.igormaznitsa.prologparser.terms.PrologTermType;
 
 public class Parser {
-	public static void main(String[] arg){
-		final PrologParser parser = new PrologParser(null);
-		String append3 = "append([],L,L). " + "append([H|T],L2,[H|L3])  :-  append(T,L2,L3)."; // Predicate append/3 defined.
+	
+	public Parser(){
+		visualise(generateStructure());
+	}
+	
+	public List<Predicate> generateStructure(){
+		System.out.println("hello world");
+//		String append3_1 = "append([],L, L). \n "; // Predicate append/3 defined.
+//		String append3_2 = "append([H|T],L2,[H|L3])  :-  append(T,L2,L3).";
+//		String facts = " john_is_cold. raining. john_Forgot_His_Raincoat. fred_lost_his_car_keys. peter_footballer.";
 		
 		
-	  try {
-			PrologStructure structure;
-			structure = (PrologStructure) parser.nextSentence(append3);
-			System.out.println(structure);
-			structure = (PrologStructure) parser.nextSentence("append([H|T],L2,[H|L3])  :-  append(T,L2,L3).");
-//			System.out.println(((PrologStructure) structure.getElement(0)).getClass());
-//			System.out.println(structure.getElement(0).getClass().getSimpleName().equals("PrologStructure"));
+		PrologCharDataSource source;
+				
+		List<Predicate> predicateList = new ArrayList<>();
 			
-			// System.out.println(structure.getElement(0).getText()+'
-			// '+structure.getElement(1).getText());
+		try {
+			source = new PrologCharDataSource(new FileReader(new File("C:\\Users\\pc\\Desktop\\prologvisualizer\\prologProgram.pl")));
+			final PrologParser parser = new PrologParser(null);
+			AbstractPrologTerm sentence = parser.nextSentence(source);
+			List<AbstractPrologTerm> sentences = new ArrayList<AbstractPrologTerm>();			
+			
+			// Read Prolog program code line by line.
+			while(sentence != null){
+				sentences.add(sentence);
+								
+				// Clauses with no bodies and 0-arity e.g. mother_jane.
+				if(sentence.getType() == PrologTermType.ATOM){
+					System.out.println(sentence + " is a " + PrologTermType.ATOM);
+					
+					PrologAtom atom = (PrologAtom) sentence;
+					Predicate pred = new Predicate(atom.getText() + "/0");
+					pred.addClause(sentence);
+					predicateList.add(pred);
+					
+				}
+				// Clauses with > 0-arity e.g. mother(jane). | mother(jane) :- has_child(jane). 
+				else if(sentence.getType() == PrologTermType.STRUCT){
+					System.out.println(sentence + " is a " + PrologTermType.STRUCT);
+					
+					PrologStructure elem1 = (PrologStructure) ((PrologStructure) sentence).getElement(0); // The head bit of a clause.
+					String predicateStruct = elem1.getFunctor().getText() + "/" + elem1.getArity();
+					Predicate pred = Predicate.getPredicate(predicateList, predicateStruct);
+					if(pred == null){
+						pred = new Predicate(predicateStruct);
+						pred.addClause(sentence);
+						predicateList.add(pred);
+					}else{
+						pred.addClause(sentence);
+					}			
+				
+				}else{
+//					System.out.println(sentence + "is a something else" );
+					throw new RuntimeException();
+				}
+				
+				sentence = parser.nextSentence();
+			}
+			
+			return predicateList;
 		} catch (Exception unexpected) {
 			throw new RuntimeException(unexpected);
 		}
 	}
+	
+	public static void visualise(List<Predicate> predicates){
+		System.out.println("in visualise");
+		for(Predicate pred: predicates){
+			System.out.println(pred.structure);
+			for(AbstractPrologTerm clause: pred.getClauses()){
+				System.out.println("\t" + clause.getType() + "\t" + clause.toString());
+			}
+		}
+	}
+	
+	public static void main(String[] arg) {
+		new Parser();
+		System.out.println("----------------------------------------------------------------------");
+		try{
+			final PrologParser parser = new PrologParser(null);
+			PrologStructure s = (PrologStructure)parser.nextSentence("mother(jane).");
+			PrologStructure ss = (PrologStructure)parser.nextSentence("mother(jane) :- has_child(jane), is_female(jane).");
+//			System.out.println(s.getFunctor().getText() + "/" + s.getArity());
+//			System.out.println(parser.nextSentence("mother_jane.").getType());
+//			System.out.println(parser.nextSentence("mother(jane).").getType());
+//			System.out.println(ss.getFunctor().getText() + "/" + ss.getArity());
+//			System.out.println(ss.getElement(0).getType());
+//			System.out.println(s.getElement(0));
+////			System.out.println(s.getElement(1));
+//			System.out.println(ss.getFunctor());
+//			PrologAtom a = (PrologAtom) parser.nextSentence("mother_jane.");
+//			System.out.println(a.getText());
+//			PrologStructure structElem1 = (PrologStructure)ss.getElement(0);
+//			System.out.println(structElem1.getFunctor() + "/" + structElem1.getArity());
+			System.out.println(s.getText());
+			System.out.println(ss.getText());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
 }
