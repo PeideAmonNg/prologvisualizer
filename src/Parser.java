@@ -1,9 +1,10 @@
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import javax.swing.JFrame;
 
 import com.igormaznitsa.prologparser.PrologCharDataSource;
 import com.igormaznitsa.prologparser.PrologParser;
@@ -11,6 +12,10 @@ import com.igormaznitsa.prologparser.terms.AbstractPrologTerm;
 import com.igormaznitsa.prologparser.terms.PrologAtom;
 import com.igormaznitsa.prologparser.terms.PrologStructure;
 import com.igormaznitsa.prologparser.terms.PrologTermType;
+
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 
 public class Parser {
 	
@@ -112,6 +117,23 @@ public class Parser {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		
+		SimpleGraphView sgv = new SimpleGraphView(); //We create our graph in here
+		 // The Layout<V, E> is parameterized by the vertex and edge types
+		 Layout<Integer, String> layout = new CircleLayout<>(sgv.graph);
+		 layout.setSize(new Dimension(300,300)); // sets the initial size of the space
+		 // The BasicVisualizationServer<V,E> is parameterized by the edge types
+		 BasicVisualizationServer<Integer,String> vv =
+		 new BasicVisualizationServer<Integer,String>(layout);
+		 vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
+
+		 JFrame frame = new JFrame("Simple Graph View");
+		 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		 frame.getContentPane().add(vv);
+		 frame.pack();
+		 frame.setVisible(true); 
+		 
+		 
 	}
 	
 }
