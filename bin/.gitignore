@@ -1,12 +1,6 @@
-/Predicate.class
 /Clause.class
-/Clause$TYPE.class
-/TYPE.class
-/Clause$ClauseType.class
-/Fact.class
-/Rule.class
-/Predicate1.class
-/Predicate$ClauseType.class
-/Predicate$PredicateType.class
+/Structure.class
 /BaseClause.class
+/NonBaseClaure.class
 /NonBaseClause.class
+/Param.class

@@ -33,15 +33,15 @@ public class Parser {
 		PrologCharDataSource source;
 				
 		List<Predicate> predicateList = new ArrayList<>();
-			
+
 		try {
-			source = new PrologCharDataSource(new FileReader(new File("C:\\Users\\pc\\Desktop\\prologvisualizer\\prologProgram.pl")));
+			source = new PrologCharDataSource(new FileReader(new File(new File("").getAbsolutePath() + "/prologProgram.pl")));
 			final PrologParser parser = new PrologParser(null);
 			AbstractPrologTerm sentence = parser.nextSentence(source);
 			List<AbstractPrologTerm> sentences = new ArrayList<AbstractPrologTerm>();			
 			
 			// Read Prolog program code line by line.
-			while(sentence != null){
+			while(sentence != null){ 
 				sentences.add(sentence);
 								
 				// Clauses with no bodies and 0-arity e.g. mother_jane.
