@@ -1,5 +1,5 @@
-append([],L1, L1).
-append([H|T],L2,[H|L3])  :-  append(T,L2,L3).
+append([], L1, L1).
+append([H|T],L2,[H|L3])  :-  append(T,L2,L3), append(T,L5,L3), append(T,L6,L3), Result is L2 * 1.
 
 make_date(Y,M,D,date(Y,M,D)).
 get_year(date(Y,_,_),Y).

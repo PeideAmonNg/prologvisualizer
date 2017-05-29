@@ -94,44 +94,46 @@ public class Parser {
 	}
 	
 	public static void main(String[] arg) {
-		new Parser();
-		System.out.println("----------------------------------------------------------------------");
-		try{
-			final PrologParser parser = new PrologParser(null);
-			PrologStructure s = (PrologStructure)parser.nextSentence("mother(jane).");
-			PrologStructure ss = (PrologStructure)parser.nextSentence("mother(jane) :- has_child(jane), is_female(jane).");
-//			System.out.println(s.getFunctor().getText() + "/" + s.getArity());
-//			System.out.println(parser.nextSentence("mother_jane.").getType());
-//			System.out.println(parser.nextSentence("mother(jane).").getType());
-//			System.out.println(ss.getFunctor().getText() + "/" + ss.getArity());
-//			System.out.println(ss.getElement(0).getType());
-//			System.out.println(s.getElement(0));
-////			System.out.println(s.getElement(1));
-//			System.out.println(ss.getFunctor());
-//			PrologAtom a = (PrologAtom) parser.nextSentence("mother_jane.");
-//			System.out.println(a.getText());
-//			PrologStructure structElem1 = (PrologStructure)ss.getElement(0);
-//			System.out.println(structElem1.getFunctor() + "/" + structElem1.getArity());
-			System.out.println(s.getText());
-			System.out.println(ss.getText());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
+//		new Parser();
+//		System.out.println("----------------------------------------------------------------------");
+//		try{
+//			final PrologParser parser = new PrologParser(null);
+//			PrologStructure s = (PrologStructure)parser.nextSentence("mother(jane).");
+//			PrologStructure ss = (PrologStructure)parser.nextSentence("mother(jane) :- has_child(jane), is_female(jane).");
+////			System.out.println(s.getFunctor().getText() + "/" + s.getArity());
+////			System.out.println(parser.nextSentence("mother_jane.").getType());
+////			System.out.println(parser.nextSentence("mother(jane).").getType());
+////			System.out.println(ss.getFunctor().getText() + "/" + ss.getArity());
+////			System.out.println(ss.getElement(0).getType());
+////			System.out.println(s.getElement(0));
+//////			System.out.println(s.getElement(1));
+////			System.out.println(ss.getFunctor());
+////			PrologAtom a = (PrologAtom) parser.nextSentence("mother_jane.");
+////			System.out.println(a.getText());
+////			PrologStructure structElem1 = (PrologStructure)ss.getElement(0);
+////			System.out.println(structElem1.getFunctor() + "/" + structElem1.getArity());
+//			System.out.println(s.getText());
+//			System.out.println(ss.getText());
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
 		
-		SimpleGraphView sgv = new SimpleGraphView(); //We create our graph in here
-		 // The Layout<V, E> is parameterized by the vertex and edge types
-		 Layout<Integer, String> layout = new CircleLayout<>(sgv.graph);
-		 layout.setSize(new Dimension(300,300)); // sets the initial size of the space
-		 // The BasicVisualizationServer<V,E> is parameterized by the edge types
-		 BasicVisualizationServer<Integer,String> vv =
-		 new BasicVisualizationServer<Integer,String>(layout);
-		 vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
-
-		 JFrame frame = new JFrame("Simple Graph View");
-		 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		 frame.getContentPane().add(vv);
-		 frame.pack();
-		 frame.setVisible(true); 
+		new ParserProcess();
+		
+//		SimpleGraphView sgv = new SimpleGraphView(); //We create our graph in here
+//		 // The Layout<V, E> is parameterized by the vertex and edge types
+//		 Layout<Integer, String> layout = new CircleLayout<>(sgv.graph);
+//		 layout.setSize(new Dimension(300,300)); // sets the initial size of the space
+//		 // The BasicVisualizationServer<V,E> is parameterized by the edge types
+//		 BasicVisualizationServer<Integer,String> vv =
+//		 new BasicVisualizationServer<Integer,String>(layout);
+//		 vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
+//
+//		 JFrame frame = new JFrame("Simple Graph View");
+//		 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		 frame.getContentPane().add(vv);
+//		 frame.pack();
+//		 frame.setVisible(true); 
 		 
 		 
 	}
