@@ -18,7 +18,7 @@ public abstract class Node {
 	
 	public abstract TYPE getNodeType();
 	
-	public String getNode() {
+	public String getNodeName() {
 		return node;
 	}
 	
@@ -32,7 +32,7 @@ public abstract class Node {
 	
 	public static Node getExistingNode(List<Node> nodes, String name){
 		for(Node n: nodes){
-			if(n.getNode().equals(name)){
+			if(n.getNodeName().equals(name)){
 				return n;
 			}
 		}
