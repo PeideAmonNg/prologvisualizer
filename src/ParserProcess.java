@@ -18,6 +18,7 @@ import Visual.MainArgumentNode;
 import Visual.Node;
 import Visual.OperatorNode;
 import Visual.VariableNode;
+import Visual.Visualiser;
 
 public class ParserProcess {
 
@@ -44,11 +45,10 @@ public class ParserProcess {
 		PrologCharDataSource source;
 
 		try {
-			source = new PrologCharDataSource(new FileReader(new File(new File("").getAbsolutePath() + filePath)));
+			source = new PrologCharDataSource(new FileReader(new File(new File("./prologfiles").getPath() + filePath)));
 
 			final PrologParser parser = new PrologParser(null);
 			AbstractPrologTerm sentence = parser.nextSentence(source);
-
 
 
 			while (sentence != null) {
@@ -61,47 +61,11 @@ public class ParserProcess {
 				System.out.println("----------------------------------------------------------------------------");
 			}
 
-			// traverseClauseBody(sentence, null);
 
-			// Case: A non-base clause i.e. Clause containing ":-"
-			// if(sentence.getType() == PrologTermType.STRUCT){
-			// System.out.println("hi1");
-			// PrologStructure prologStructureSentence = (PrologStructure)
-			// sentence;
-			// if(prologStructureSentence.getFunctor().getType().toString() ==
-			// "OPERATOR"){
-			// System.out.println("hi2");
-			// if(((Operator)(prologStructureSentence.getFunctor())).getOperatorType()
-			// == OperatorType.XFX){ // XFX is ":-".
-			// System.out.println("hi3");
-			// System.out.println(prologStructureSentence.getElement(1));
-			// traverseClauseBody(prologStructureSentence.getElement(1), null);
-			// }else{
-			// throw new Exception("3.Hey re-check the if-else condition.");
-			// }
-			// }else if(prologStructureSentence.getFunctor().getType() ==
-			// PrologTermType.ATOM){
-			// System.out.println("ok");
-			// System.out.println();
-			// System.out.println(prologStructureSentence.getText().toString());
-			// }else{
-			// throw new Exception("2.Hey re-check the if-else condition.");
-			// }
-			//
-			// }else{ // Example clause here: mother_jane.
-			// throw new Exception("1.Hey re-check the if-else condition.");
-			// }
 
 			System.out.println("-----------------------------The End----------------------------------");
-			//
-			// for(List<Node> nodeList: predicateClauses){
-			// for(Node n: nodeList){
-			// System.out.print(n.getNode() + "\t");
-			// }
-			// System.out.println();
-			// System.out.println("------------------------------------------------------------------------------");
-			// }
-			//
+	
+			
 			for (List<Node> nodeList : predicateClauses) {
 				for (Node n : nodeList) {
 					System.out.print(n.getNodeName() + "\t");
@@ -115,18 +79,11 @@ public class ParserProcess {
 				System.out.println("------------------------------------------------------------------------------");
 			}
 
+			
 			regressionTestBuiltNodeCount();
+			Visualiser vis = new Visualiser();
+			vis.visualise(this.predicateClauses);
 
-			// System.out.println(nodes.size());
-			// for(Node n: nodes){
-			// System.out.println(n.getNode());
-			// }
-			// for(Node n: nodes){
-			// System.out.println(n);
-			// }
-
-			// System.out.println(parser.nextSentence("mother(jane).").getType()
-			// == PrologTermType.STRUCT);
 		} catch (Exception e) {
 			e.printStackTrace();
 
@@ -188,7 +145,7 @@ public class ParserProcess {
 
 					return variableNode;
 
-				} else if (((Operator) (((PrologStructure) term).getFunctor())).getOperatorType() == OperatorType.XFX) { // :-
+				} else if (((Operator) (((PrologStructure) term).getFunctor())).getOperatorType() == OperatorType.XFX) { // :-, <, >, ==, \=, etc.
 					System.out.println("------ XFX OP------");
 					if (((PrologStructure) term).getFunctor().getText().equals(":-")) {
 						System.out.println("------ :- OP------");
@@ -203,6 +160,7 @@ public class ParserProcess {
 						traverseClauseBody((((PrologStructure) term).getElement(1)), null, false);
 					} else {
 						System.out.println("------equality OP------");
+						System.out.println(((PrologStructure) term).getFunctor().getType());
 						String op = ((PrologStructure) term).getFunctor().getText().trim();
 						if (op.equals(">") || op.equals("<") || op.equals(">=") || op.equals("=<") || op.equals("==")
 								|| op.equals("\\=")) {
@@ -210,7 +168,7 @@ public class ParserProcess {
 									Node.TYPE.Variable, false);
 							Node rightNode = traverseClauseBody(((PrologStructure) term).getElement(1), null, false);
 							Node equalityNode = retrieveNode(((PrologStructure) term).getFunctor().getText(),
-									Node.TYPE.Functor, true);
+									Node.TYPE.Operator, true);
 
 							return equalityNode;
 						} else {
@@ -390,7 +348,7 @@ public class ParserProcess {
 		try{
 						
 			for(int i = 0; i < this.files.length; i++){
-				PrologCharDataSource source = new PrologCharDataSource(new FileReader(new File(new File("").getAbsolutePath() + files[i])));				
+				PrologCharDataSource source = new PrologCharDataSource(new FileReader(new File(new File("./prologfiles").getAbsolutePath() + files[i])));				
 				final PrologParser parser = new PrologParser(null);
 				AbstractPrologTerm sentence = parser.nextSentence(source);
 				 
@@ -410,7 +368,7 @@ public class ParserProcess {
 			}
 
 		}catch(Exception e){
-			
+			e.printStackTrace();
 		}
 	}
 }

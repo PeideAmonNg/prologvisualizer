@@ -1,5 +1,6 @@
 package Visual;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,5 +20,11 @@ public class OperatorNode extends Node {
 
 	public TYPE getNodeType(){
 		return TYPE.Operator;
+	}
+
+	@Override
+	public Color getNodeColor() {
+		// TODO Auto-generated method stub
+		return Color.green;
 	}
 }

@@ -1,5 +1,7 @@
 package Visual;
 
+import java.awt.Color;
+
 import Visual.Node.TYPE;
 
 public class VariableNode extends Node {
@@ -16,5 +18,11 @@ public class VariableNode extends Node {
 
 	public TYPE getNodeType(){
 		return TYPE.Variable;
+	}
+
+	@Override
+	public Color getNodeColor() {
+		// TODO Auto-generated method stub
+		return Color.blue;
 	}
 }

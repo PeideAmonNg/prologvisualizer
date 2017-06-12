@@ -1,6 +1,6 @@
 package Visual;
 
-import Visual.Node.TYPE;
+import java.awt.Color;
 
 public class ListOperatorNode extends Node {
 
@@ -17,5 +17,11 @@ public class ListOperatorNode extends Node {
 
 	public TYPE getNodeType(){
 		return TYPE.ListOperator;
+	}
+
+	@Override
+	public Color getNodeColor() {
+		// TODO Auto-generated method stub
+		return Color.orange;
 	}
 }

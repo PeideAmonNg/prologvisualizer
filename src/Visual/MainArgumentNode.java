@@ -1,5 +1,7 @@
 package Visual;
 
+import java.awt.Color;
+
 import Visual.Node.TYPE;
 
 public class MainArgumentNode extends Node {
@@ -27,6 +29,12 @@ public class MainArgumentNode extends Node {
 
 	public TYPE getNodeType(){
 		return TYPE.MainArgument;
+	}
+
+	@Override
+	public Color getNodeColor() {
+		// TODO Auto-generated method stub
+		return Color.lightGray;
 	}
 	
 }

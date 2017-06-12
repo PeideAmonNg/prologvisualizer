@@ -1,5 +1,6 @@
 package Visual;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +16,8 @@ public abstract class Node {
 	}
 	
 	public abstract void render();
-	
 	public abstract TYPE getNodeType();
+	public abstract Color getNodeColor();
 	
 	public String getNodeName() {
 		return node;
@@ -38,6 +39,12 @@ public abstract class Node {
 		}
 		
 		return null;
+	}
+	
+	
+	@Override
+	public String toString(){
+		return this.getNodeName();
 	}
 
 }

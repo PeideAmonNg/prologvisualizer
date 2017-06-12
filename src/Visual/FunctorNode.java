@@ -1,5 +1,7 @@
 package Visual;
 
+import java.awt.Color;
+
 import Visual.Node.TYPE;
 
 public class FunctorNode extends Node {
@@ -17,6 +19,12 @@ public class FunctorNode extends Node {
 	
 	public TYPE getNodeType(){
 		return TYPE.ListOperator;
+	}
+
+	@Override
+	public Color getNodeColor() {
+		// TODO Auto-generated method stub
+		return Color.yellow;
 	}
 
 }

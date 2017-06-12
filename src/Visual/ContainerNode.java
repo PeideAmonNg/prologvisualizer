@@ -1,5 +1,6 @@
 package Visual;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +31,12 @@ public class ContainerNode extends Node{
 
 	public void addNode(Node node){
 		this.nodes.add(node);
+	}
+
+	@Override
+	public Color getNodeColor() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
