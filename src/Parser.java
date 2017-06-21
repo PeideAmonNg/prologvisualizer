@@ -119,6 +119,7 @@ public class Parser {
 //		}
 		
 		new ParserProcess();
+		new Visualiser();
 		
 //		SimpleGraphView sgv = new SimpleGraphView(); //We create our graph in here
 //		 // The Layout<V, E> is parameterized by the vertex and edge types

@@ -25,6 +25,10 @@ public class OperatorNode extends Node {
 	@Override
 	public Color getNodeColor() {
 		// TODO Auto-generated method stub
+		if(super.isMainArg){
+			return Color.LIGHT_GRAY;
+		}
+		
 		return Color.green;
 	}
 }

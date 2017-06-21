@@ -7,6 +7,7 @@
 	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/jung2-2_0_1/jung-algorithms-2.0.1.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/jung2-2_0_1/jung-api-2.0.1.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/jung2-2_0_1/jung-graph-impl-2.0.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/jung2-2_0_1/jung-visualization-2.0.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/jung2-2_0_1/jung-visualization-2.0.1.jar" sourcepath="jung2-2_0_1-sources"/>
 	<classpathentry kind="output" path="bin"/>
+	<referencedentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/jung2-2_0_1/collections-generic-4.01.jar" sourcepath="jung2-2_0_1-sources"/>
 </classpath>

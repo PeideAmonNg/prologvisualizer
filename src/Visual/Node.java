@@ -10,9 +10,16 @@ public abstract class Node {
 	protected List<Node> nodesTo = new ArrayList<>();
 	protected List<Node> nodesFrom = new ArrayList<>();
 	public enum TYPE {Functor, ListOperator, MainArgument, Operator, Variable};
+	public boolean isMainArg;
+	public int mainArgNo;
 	
 	public Node(String node){
 		this.node = node;
+	}
+	
+	public void setMainArg(int no){
+		this.isMainArg = true;
+		this.mainArgNo = no;
 	}
 	
 	public abstract void render();
@@ -21,6 +28,10 @@ public abstract class Node {
 	
 	public String getNodeName() {
 		return node;
+	}
+	
+	public void setNodeName(String node) {
+		this.node = node;
 	}
 	
 	public void addToNode(Node node){

@@ -23,6 +23,10 @@ public class VariableNode extends Node {
 	@Override
 	public Color getNodeColor() {
 		// TODO Auto-generated method stub
-		return Color.blue;
+		if(super.isMainArg){
+			return Color.LIGHT_GRAY;
+		}
+		
+		return Color.PINK;
 	}
 }
