@@ -12,6 +12,7 @@ import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
@@ -21,12 +22,16 @@ import java.io.File;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.BoundedRangeModel;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.commons.collections15.Transformer;
 
@@ -34,15 +39,27 @@ import Visual.Node;
 import Visual.SimpleGraphView;
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.decorators.ConstantDirectionalEdgeValueTransformer;
+import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 public class Visualiser implements ActionListener  {
-
+	
+	public static final int LAYOUT_WIDTH = 1000;
+	public static final int LAYOUT_HEIGHT = 600;
+	public static final int COLOURS_PANEL_HEIGHT = 70;
+	
+	
 	public Visualiser(){
+		
+		
+		
 	    
 	    class MyPanel extends JPanel {
 
@@ -82,21 +99,24 @@ public class Visualiser implements ActionListener  {
 	            try{
 	            	System.out.println("hello");
 		            Image gray = ImageIO.read(new File("./colours/gray.png"));
-		            Image yellow = ImageIO.read(new File("./colours/yellow.png"));
-		            Image pink = ImageIO.read(new File("./colours/pink.png"));
+		            Image rect = ImageIO.read(new File("./colours/rectangle.png"));
+		            Image tri = ImageIO.read(new File("./colours/triangle.png"));
 		            Image green = ImageIO.read(new File("./colours/green.png"));
 		            
 		            System.out.println("after pink");
 		            
-		            String grayText = "Current Function's Argument";
-		            g.drawImage(gray, 10, 10, 15, 15, container);
-		            g.drawString(grayText, 30, 10+ (int)(15.0*0.75));
-		            g.drawImage(yellow, 10, 10+15, 15, 15, container);
-		            g.drawString("Predicates/Functions", 30, 10+15+(int)(15.0*0.75));
-		            g.drawImage(pink, 10, 10+15+15, 15, 15, container);
-		            g.drawString("Variables", 30, 10+15+15+(int)(15.0*0.75));
-		            g.drawImage(green, 10, 10+15+15+15, 15, 15, container);
-		            g.drawString("Maths Operators", 30, 10+15+15+15+(int)(15.0*0.75));
+		            String grayText = "Current Function's Arguments";
+		            
+		            int imageWidth = 15, imageHeight = 15;
+		            int topOffset = 25;
+		            g.drawImage(gray, 10, topOffset, imageWidth, imageHeight, container);
+		            g.drawString(grayText, 30, topOffset + (int)(15.0*0.75));
+		            g.drawImage(rect, 10, topOffset+15, imageWidth, imageHeight, container);
+		            g.drawString("Functions/Lists/Operators", 30, topOffset + imageHeight + (int)(15.0*0.75));
+		            g.drawImage(tri, 10, topOffset + imageHeight + imageHeight, imageWidth, imageHeight, container);
+		            g.drawString("Variables", 30, topOffset + imageHeight + imageHeight + (int)(15.0*0.75));
+//		            g.drawImage(green, 10, 10+15+15+15, 15, 15, container);
+//		            g.drawString("Maths Operators", 30, 10+15+15+15+(int)(15.0*0.75));
 	            }catch(Exception ex){
 	            	ex.printStackTrace();
 	            }	            
@@ -105,7 +125,7 @@ public class Visualiser implements ActionListener  {
 	    
 	    		
 		JPanel colours = new ColoursPanel();
-		colours.setPreferredSize(new Dimension(100, 70));
+		colours.setPreferredSize(new Dimension(LAYOUT_WIDTH, COLOURS_PANEL_HEIGHT));
 		colours.setBackground(Color.WHITE);
 	    
 	    JTextField textField = new JTextField(1);
@@ -146,15 +166,20 @@ public class Visualiser implements ActionListener  {
 		container.add(colours);
 		container.setBackground(Color.WHITE);
 		JPanel tempPanel = new JPanel();
-		tempPanel.setPreferredSize(new Dimension(600, 600));
+		tempPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
 		tempPanel.setBackground(Color.WHITE);
 		container.add(tempPanel);
 		
 //		container.add(visualise(null));	
+		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT + COLOURS_PANEL_HEIGHT + 90));
+		System.out.println(LAYOUT_HEIGHT + COLOURS_PANEL_HEIGHT + 90);
 		
 		frame.getContentPane().add(container);
 		frame.pack();
 		frame.setVisible(true); 
+		
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
 	}
 		
 		
@@ -170,10 +195,10 @@ public class Visualiser implements ActionListener  {
 	//	Layout<Node, String> layout = new KKLayout<>(sgv.graph);
 	//	Layout<Node, String> layout = new DAGLayout<>(sgv.graph);
 		
-		layout.setSize(new Dimension(600, 600)); // sets the initial size of the space
+		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets the initial size of the space
 		// The BasicVisualizationServer<V,E> is parameterized by the edge types
 		BasicVisualizationServer<Node,String> vv = new BasicVisualizationServer<Node,String>(layout);
-		vv.setPreferredSize(new Dimension(600, 600)); //Sets the viewing area size
+		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); //Sets the viewing area size
 	//	vv.setPreferredSize(new Dimension(600, 600)); //Sets the viewing area size
 	//	vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
 		 // Set up a new stroke Transformer for the edges
@@ -185,10 +210,35 @@ public class Visualiser implements ActionListener  {
 			}
 		};
 		
-	//	vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
-	//	vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+//		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
+//		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
 	
+		
+		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<String, String>() {
+            public String transform(String e) {
+            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
+            		return e.replaceAll("\\d","");            
+            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("is") || e.startsWith("of")){ //Functions or operators
+            		return e.split("_")[0];
+            	}else{ //Just variables
+            		return e;
+            	}
+            }
+        });
+					
+		vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, String>, String>, Number>() {
+			@Override
+			public Number transform(Context<Graph<Node, String>, String> arg0) {          
+                return 0.5; //halfway on an edge.
+			}
+        });
+		
+		
+		
+		vv.getRenderContext().setLabelOffset(15);
 		 
+		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, String>(5, 5, 0));
+		
 	    DefaultVertexLabelRenderer vertexLabelRenderer = new DefaultVertexLabelRenderer(Color.black){
 	        @Override
 	        public <V> Component getVertexLabelRendererComponent(
@@ -198,6 +248,20 @@ public class Visualiser implements ActionListener  {
 	            super.getVertexLabelRendererComponent(
 	                vv, value, font, isSelected, vertex);
 	            setForeground(Color.black);
+	            
+	            Node n = (Node) vertex;
+	            if(n.isMainArg){
+	            	this.setText(n.mainArgNo + ". " + this.getText());
+	            }
+	            
+	            if(n.getNodeType() == Node.TYPE.Functor){
+	            	this.setText(this.getText() + "()");
+	            }
+	            
+	            if(n.getNodeType() == Node.TYPE.Variable){
+	            	this.setText("<html><br>" + this.getText() + "</html>");
+	            }
+	            	
 	            return this;
 	        }
 	        
@@ -209,6 +273,7 @@ public class Visualiser implements ActionListener  {
 	        	return node.getNodeColor();
 	        }
 	    };
+	    
 	    Transformer<Node,Shape> vertexSize = new Transformer<Node, Shape>(){
 	        public Shape transform(Node i){
 	        	System.out.println(i.getClass().getTypeName());
@@ -217,8 +282,9 @@ public class Visualiser implements ActionListener  {
 	        	if(nodeType.equals("Visual.ListOperatorNode") || nodeType.equals("Visual.FunctorNode")){
 	//        		shape = new Rectangle(-15, -15, 20, 20);
 	        		int width = (i.getNodeName().length() < 5) ? 5 : i.getNodeName().length(); // so the node doesn't look too small.        		
+	        		width = width > 10 ? 10 : width;
 	        		
-	        		shape = new Rectangle(-15, -15, width * 4, 20);
+	        		shape = new Rectangle(-15, -15, (int)(width * 4.5), 20);
 	        	}else if(nodeType.equals("Visual.OperatorNode")){
 	        		shape = new Rectangle(-15, -15, 20, 20);
 	        	}else if(nodeType.equals("Visual.VariableNode")){

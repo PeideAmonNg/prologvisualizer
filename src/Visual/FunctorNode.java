@@ -18,7 +18,7 @@ public class FunctorNode extends Node {
 	}
 	
 	public TYPE getNodeType(){
-		return TYPE.ListOperator;
+		return TYPE.Functor;
 	}
 
 	@Override

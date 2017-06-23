@@ -3,6 +3,7 @@ import java.util.List;
 
 import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.UndirectedSparseMultigraph;
 
 public class SimpleGraphView {
 
@@ -29,6 +30,7 @@ public class SimpleGraphView {
 //    	UndirectedSparseMultigraph<V,E>
     	
     	graph = new DirectedSparseMultigraph<>();
+//    	graph = new UndirectedSparseMultigraph<>();
     	
     	if(nodes != null){
     		int id = 1;
@@ -36,8 +38,33 @@ public class SimpleGraphView {
             	graph.addVertex(nodes.get(i));
             	if(!nodes.get(i).nodesFrom.isEmpty()){
             		Node n = nodes.get(i);
-            		for(Node x : n.nodesFrom){
-            			graph.addEdge(Integer.toString(id++), x, n);
+            		for(int j = 0; j < n.nodesFrom.size(); j++){
+            			Node x = n.nodesFrom.get(j);
+            			if(n.getNodeType() == Node.TYPE.ListOperator){
+            				if(j == 0){
+            					System.out.println("tail");
+            					graph.addEdge("head" + Integer.toString(id++), x, n);
+            				}else{
+            					graph.addEdge("tail" + Integer.toString(id++), x, n);
+            				}
+            				
+            			}else if(n.getNodeType() == Node.TYPE.Functor){
+            				if(n.getNodeName().substring(1, n.getNodeName().length()).equals("member")){
+            					if(j == 0){
+            						graph.addEdge("is " + "_" + Integer.toString(id++), x, n);
+            					}else{
+            						graph.addEdge("of " + "_" + Integer.toString(id++), x, n);
+            					}
+            				}else{
+            					graph.addEdge("arg " + (j+1) + "_" + Integer.toString(id++), x, n);
+            				}
+            			}else if(n.getNodeType() == Node.TYPE.Operator){
+        					graph.addEdge("op " + (j+1) + "_" + Integer.toString(id++), x, n);
+            			}else if(n.getNodeType() == Node.TYPE.Variable && !n.nodesFrom.isEmpty()){
+            				graph.addEdge("is " + "_" + Integer.toString(id++), x, n);
+            			}else{
+            				graph.addEdge(Integer.toString(id++), x, n);
+            			}
             		}        		
             	}
             }

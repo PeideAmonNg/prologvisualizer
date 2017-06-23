@@ -27,6 +27,6 @@ public class VariableNode extends Node {
 			return Color.LIGHT_GRAY;
 		}
 		
-		return Color.PINK;
+		return Color.white;
 	}
 }
