@@ -7,8 +7,8 @@ import java.util.List;
 public abstract class Node {
 	
 	protected String node;
-	protected List<Node> nodesTo = new ArrayList<>();
-	protected List<Node> nodesFrom = new ArrayList<>();
+	public List<Node> nodesTo = new ArrayList<>();
+	public List<Node> nodesFrom = new ArrayList<>();
 	public enum TYPE {Functor, ListOperator, MainArgument, Operator, Variable};
 	public boolean isMainArg;
 	public int mainArgNo;

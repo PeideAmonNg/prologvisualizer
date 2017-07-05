@@ -34,36 +34,58 @@ public class SimpleGraphView {
     	
     	if(nodes != null){
     		int id = 1;
-            for(int i = 0; i < nodes.size(); i++){
+            for(int i = 0; i < nodes.size(); i++){ // For every node in the graph.
             	graph.addVertex(nodes.get(i));
             	if(!nodes.get(i).nodesFrom.isEmpty()){
             		Node n = nodes.get(i);
-            		for(int j = 0; j < n.nodesFrom.size(); j++){
-            			Node x = n.nodesFrom.get(j);
+            		
+            		for(int j = 0; j < n.nodesFrom.size(); j++){ // For every node the current node is connected to.
+            			Node fromNode = n.nodesFrom.get(j);
+            			
             			if(n.getNodeType() == Node.TYPE.ListOperator){
-            				if(j == 0){
-            					System.out.println("tail");
-            					graph.addEdge("head" + Integer.toString(id++), x, n);
+            				if(fromNode.getNodeType() == Node.TYPE.Variable && fromNode.isMainArg && n.nodesFrom.size() == 1){
+            					graph.addEdge("clauseHeadListArg" + Integer.toString(id++), fromNode, n);
             				}else{
-            					graph.addEdge("tail" + Integer.toString(id++), x, n);
+	            				if(j == 0){
+	            					System.out.println("tail");
+	            					graph.addEdge("head" + Integer.toString(id++), fromNode, n);
+	            				}else{
+	            					graph.addEdge("tail" + Integer.toString(id++), fromNode, n);
+	            				}
             				}
             				
             			}else if(n.getNodeType() == Node.TYPE.Functor){
             				if(n.getNodeName().substring(1, n.getNodeName().length()).equals("member")){
             					if(j == 0){
-            						graph.addEdge("is " + "_" + Integer.toString(id++), x, n);
+            						graph.addEdge("element " + "_" + Integer.toString(id++), fromNode, n);
             					}else{
-            						graph.addEdge("of " + "_" + Integer.toString(id++), x, n);
+            						graph.addEdge("set " + "_" + Integer.toString(id++), fromNode, n);
             					}
             				}else{
-            					graph.addEdge("arg " + (j+1) + "_" + Integer.toString(id++), x, n);
+            					graph.addEdge("arg " + (j+1) + "_" + Integer.toString(id++), fromNode, n);
             				}
             			}else if(n.getNodeType() == Node.TYPE.Operator){
-        					graph.addEdge("op " + (j+1) + "_" + Integer.toString(id++), x, n);
-            			}else if(n.getNodeType() == Node.TYPE.Variable && !n.nodesFrom.isEmpty()){
-            				graph.addEdge("is " + "_" + Integer.toString(id++), x, n);
+            				if(j == 0){
+            					graph.addEdge("op1" + "_" + Integer.toString(id++), fromNode, n);            					
+            				}else{
+            					graph.addEdge("op2" + "_" + Integer.toString(id++), fromNode, n);            					
+            				}
+            			}else if(n.getNodeType() == Node.TYPE.Variable){
+            				if(fromNode.getNodeType() == Node.TYPE.Functor){
+            					graph.addEdge("is _fromFunctor" + Integer.toString(id++), fromNode, n);
+            				}else if(fromNode.getNodeType() == Node.TYPE.ListOperator){
+            					if(n == fromNode.nodesTo.get(0)){
+	            					System.out.println("head");
+	            					graph.addEdge("head" + Integer.toString(id++), fromNode, n);
+	            				}else{
+	            					graph.addEdge("tail" + Integer.toString(id++), fromNode, n);
+	            				}
+            				}else{
+                				graph.addEdge("is " + "_" + Integer.toString(id++), fromNode, n);            					
+            				}
+
             			}else{
-            				graph.addEdge(Integer.toString(id++), x, n);
+            				graph.addEdge(Integer.toString(id++), fromNode, n);
             			}
             		}        		
             	}

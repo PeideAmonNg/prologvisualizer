@@ -22,7 +22,7 @@ import Visual.VariableNode;
 public class ParserProcess {
 
 	private List<Node> nodes = new ArrayList<>();
-	private List<List<Node>> predicateClauses = new ArrayList<>();
+	private List<List<Node>> predicateClauses = new ArrayList<List<Node>>();
 
 	private int listArgumentCount = 1;
 	private int listOperatorNodeCount = 1;
@@ -111,9 +111,33 @@ public class ParserProcess {
 			traverseClauseBody(sentence, new MainArgumentNode(""), true);
 			predicateClauses.add(this.nodes);
 			initializeFields();
+			trimPaths();
 			return predicateClauses.get(0);
 			
 		
+	}
+	
+	private void trimPaths(){
+		List<Node> list = predicateClauses.get(0);
+		System.out.println("in trim path");
+		System.out.println(list.size());
+		List<Node> nodesToRemove = new ArrayList<>();
+		for(int i = 0; i < list.size(); i++){
+			Node node = list.get(i);
+			
+			if(node.nodesFrom.size() == 1 && node.nodesTo.size() == 1){
+				Node from = node.nodesFrom.get(0);
+				Node to = node.nodesTo.get(0);
+				from.nodesTo.set(from.nodesTo.indexOf(node), to);
+				to.nodesFrom.set(to.nodesFrom.indexOf(node), from);
+				
+				nodesToRemove.add(node);
+			}
+		}
+		
+		for(Node node : nodesToRemove){
+			list.remove(node);
+		}
 	}
 	
 	// Recursively traverse clauses in the body of the current outer clause being parsed.
@@ -161,6 +185,8 @@ public class ParserProcess {
 					Node arithmeticOpNode = traverseClauseBody(((PrologStructure) term).getElement(1), variableNode,
 							false);
 					variableNode.addFromNode(arithmeticOpNode);
+					
+					arithmeticOpNode.addToNode(variableNode);
 
 					return variableNode;
 
@@ -188,6 +214,9 @@ public class ParserProcess {
 									Node.TYPE.Operator, true);
 							equalityNode.addFromNode(leftNode);
 							equalityNode.addFromNode(rightNode);
+							
+							leftNode.addToNode(equalityNode);
+							rightNode.addToNode(equalityNode);
 
 							return equalityNode;
 					}else{
@@ -209,6 +238,9 @@ public class ParserProcess {
 							false);
 					arithmeticOpNode.addFromNode(leftVarNode);
 					arithmeticOpNode.addFromNode(rightVarNode);
+					
+					leftVarNode.addToNode(arithmeticOpNode);
+					rightVarNode.addToNode(arithmeticOpNode);
 
 					return arithmeticOpNode;
 
@@ -255,26 +287,81 @@ public class ParserProcess {
 				while (index < arity) { // Go through each parameter in the functor.
 					System.out.println("current parameter is " + ((PrologStructure) term).getElement(index));
 					if (isPartOfClauseHead) {
-						if (parentNode != null && parentNode.getNodeType() == Node.TYPE.MainArgument) { //Not a functor nested within a functor e.g. Increment(decrement(X, Result), Result)
+						if (parentNode != null && parentNode.getNodeType() == Node.TYPE.MainArgument) { // Current argument is a MainArg, and not a functor nested within a functor e.g. Increment(decrement(X, Result), Result)
 							System.out.println("1.parentNode is " + parentNode.getClass().getName());
-//							Node mainArgNode = retrieveNode("Arg", Node.TYPE.MainArgument, true);
-							Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
-//							mainArgNode.addFromNode(n);
-							n.setMainArg(index + 1);
+							
+							if(((PrologStructure) term).getElement(index).getType() == PrologTermType.LIST){								
+								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
+								Node varNode = retrieveNode(n.getNodeName(), Node.TYPE.Variable, true);
+								varNode.setMainArg(index + 1);
+								n.addFromNode(varNode);
+								
+								varNode.addToNode(n);
+							}else{
+//								Node mainArgNode = retrieveNode("Arg", Node.TYPE.MainArgument, true);
+								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
+//								mainArgNode.addFromNode(n);
+								n.setMainArg(index + 1);
+							}
 						}else{
 							System.out.println("2.parentNode is null");
+							
+							boolean nodeExists = true;
+							AbstractPrologTerm currentArg = ((PrologStructure) term).getElement(index);
+							if(currentArg.getType() == PrologTermType.VAR){
+								nodeExists = nodeExists(((PrologStructure) term).getElement(index).getText());
+							}else if(currentArg.getType() == PrologTermType.LIST){
+								nodeExists = true;
+							}
+							
 							Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
-							fNode.addFromNode(n);
+							
+							
+							if(nodeExists){
+								fNode.addFromNode(n);
+								n.addToNode(fNode);
+							}else{
+								n.addFromNode(fNode);
+								fNode.addToNode(n);
+							}
+							
+//							Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
+//							fNode.addFromNode(n);
 						}
-					} else {
+					} else { // in clause body.
 						System.out.println("functor that is not in the clause head.");
+						
+						boolean nodeExists = false;
+						AbstractPrologTerm currentArg = ((PrologStructure) term).getElement(index);
+						if(currentArg.getType() == PrologTermType.VAR){
+							nodeExists = nodeExists(((PrologStructure) term).getElement(index).getText());
+						}else if(currentArg.getType() == PrologTermType.LIST){
+							nodeExists = true;
+						}
+						
 						Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
 						
 						if(((PrologStructure) term).getFunctor().getText().equals("not") && index == 0){
 							n.setNodeName("!" + n.getNodeName());
 						}else{
-							fNode.addFromNode(n);
+							if(nodeExists){
+								fNode.addFromNode(n);
+								n.addToNode(fNode);
+							}else{
+								n.addFromNode(fNode);
+								fNode.addToNode(n);
+							}
 						}
+						
+						
+						
+//						Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
+//						
+//						if(((PrologStructure) term).getFunctor().getText().equals("not") && index == 0){
+//							n.setNodeName("!" + n.getNodeName());
+//						}else{
+//							fNode.addFromNode(n);
+//						}
 						
 					}
 
@@ -315,14 +402,34 @@ public class ParserProcess {
 			System.out.println("need to implement list arg");
 			Node listHeadNode, listTailNode;
 			
+			
 			if(list.getElement(0) != null){
 				listHeadNode = retrieveNode(list.getElement(0).getText(), Node.TYPE.Variable, false);
-				listNode.addFromNode(listHeadNode);
+				
+				if(isPartOfClauseHead){
+					listHeadNode.addFromNode(listNode);
+					listNode.addToNode(listHeadNode);
+										
+				}else{
+					listNode.addFromNode(listHeadNode);
+					
+					listHeadNode.addToNode(listNode);
+				}
 			}
 			
 			if(list.getElement(1) != null){
-				listTailNode = retrieveNode(list.getElement(1).getText(), Node.TYPE.Variable, false);
-				listNode.addFromNode(listTailNode);
+//				listTailNode = retrieveNode(list.getElement(1).getText(), Node.TYPE.Variable, false);
+				listTailNode = traverseClauseBody(list.getElement(1), null, isPartOfClauseHead);
+//				listTailNode = retrieveNode(list.getElement(1).getText(), Node.TYPE.ListOperator, true);
+				
+				if(isPartOfClauseHead){
+					listTailNode.addFromNode(listNode);
+					listNode.addToNode(listTailNode);
+				}else{
+					listNode.addFromNode(listTailNode);
+					
+					listTailNode.addToNode(listNode);					
+				}
 			}
 			
 			return listNode;
@@ -335,8 +442,17 @@ public class ParserProcess {
 		return null;
 	}
 
+	private boolean nodeExists(String nodeName){
+		for (Node n : this.nodes) {
+			if (n.getNodeName().equals(nodeName)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	
-	// Factory method for creating Nodes: Returns an existing Node, otherwise a newly created one.
+	// Factory method for creating Nodes: Returns an existing Node, otherwise a newly created one and add to this.nodes list.
 	private Node retrieveNode(String nodeName, Node.TYPE type, boolean isOverride) throws Exception {
 		// if(nodeName.equals("") || nodeName == null){
 		// throw new Exception("nodeName cant be empty or null");
