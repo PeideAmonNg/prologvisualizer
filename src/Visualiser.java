@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Paint;
@@ -14,16 +13,18 @@ import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.io.File;
+import java.net.URL;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -38,17 +39,22 @@ import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
+import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
+import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
-import edu.uci.ics.jung.visualization.control.GraphMouseListener;
+import edu.uci.ics.jung.visualization.control.AbstractModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
+import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.ScalingControl;
 import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
-import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 public class Visualiser implements ActionListener  {
 	
-	public static final int LAYOUT_WIDTH = 1000;
-	public static final int LAYOUT_HEIGHT = 600;
+	public static final int LAYOUT_WIDTH = 1200; //1000
+	public static final int LAYOUT_HEIGHT = 700; //600
 	public static final int INFO_PANEL_HEIGHT = 70;
 	public static final int SCREEN_MARGIN = 10;
 	
@@ -61,11 +67,11 @@ public class Visualiser implements ActionListener  {
 		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));		
 		container.setBackground(Color.WHITE);
 	    	   	
-		JPanel infoPanel = new InfoPanel(container);
-		infoPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, INFO_PANEL_HEIGHT));
-		infoPanel.setBackground(Color.WHITE);
+//		JPanel infoPanel = new InfoPanel(container);
+//		infoPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, INFO_PANEL_HEIGHT));
+//		infoPanel.setBackground(Color.WHITE);
 	    
-		JTextField textField = new JTextField(); 
+		JTextField textField = new JTextField(1); 
 		
 		JButton button = new JButton("Visualise");
 	    
@@ -79,11 +85,12 @@ public class Visualiser implements ActionListener  {
 	    
 	    JPanel tempDrawingPanel = new JPanel();
 		tempDrawingPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+//		tempDrawingPanel.setPreferredSize(new Dimension(500, 500));
 		tempDrawingPanel.setBackground(Color.WHITE);
 		
 		
 	    container.add(inputPanel);	    
-		container.add(infoPanel);
+//		container.add(infoPanel);
 		container.add(tempDrawingPanel);
 	
 		frame.getContentPane().add(container);
@@ -92,8 +99,8 @@ public class Visualiser implements ActionListener  {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
 //		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));
-		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));	
-		frame.setResizable(false);
+//		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 70));	
+//		frame.setResizable(false);
 
 		System.out.println(LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 90);
 		
@@ -106,20 +113,63 @@ public class Visualiser implements ActionListener  {
 		    		System.out.println("done traversing");
 		    		
 		    		frame.getContentPane().removeAll();
-		    		JPanel vv = visualise(nodes);
+		    		VisualizationViewer vv = (VisualizationViewer) visualise(nodes);
+//		    		JPanel tempPanel = new JPanel();
+		    		final GraphZoomScrollPane tempPanel = new GraphZoomScrollPane(vv);
+		    		tempPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+		    		tempPanel.add(vv);
+		    		
+		    		final AbstractModalGraphMouse graphMouse = new DefaultModalGraphMouse<String,Number>();
+					vv.setGraphMouse(graphMouse);
+
+					vv.addKeyListener(graphMouse.getModeKeyListener());
+					vv.setToolTipText("<html><center>Type 'p' for Pick mode<p>Type 't' for Transform mode");
+					
+					final ScalingControl scaler = new CrossoverScalingControl();
+
+					JButton plus = new JButton("+");
+					plus.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							scaler.scale(vv, 1.1f, vv.getCenter());
+						}
+					});
+					JButton minus = new JButton("-");
+					minus.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							scaler.scale(vv, 1 / 1.1f, vv.getCenter());
+						}
+					});
+
+					JButton reset = new JButton("reset");
+					reset.addActionListener(new ActionListener() {
+
+						public void actionPerformed(ActionEvent e) {
+							vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT)
+									.setToIdentity();
+							vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.VIEW).setToIdentity();
+						}
+					});
+
+					JPanel controls = new JPanel();
+					controls.add(plus);
+					controls.add(minus);
+					controls.add(reset);
+					frame.add(controls, BorderLayout.SOUTH);
+		    		
 		    		container.removeAll();
 		    		container.add(inputPanel);
-		    		container.add(infoPanel);
+//		    		container.add(infoPanel);
 		    		vv.setBackground(Color.WHITE);
-		    		container.add(vv);	
+		    		tempPanel.setBackground(Color.white);
+		    		container.add(tempPanel);	
 		    		frame.getContentPane().add(container); 	
 		    		frame.pack();
 		    		frame.setVisible(true);
 //		    		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 //		    		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
 //		    		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));
-		    		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));	
-		    		frame.setResizable(false);
+//		    		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));	
+//		    		frame.setResizable(false);
 		    		textField.requestFocus();
 	    		}catch(Exception ex){	    			
 	    			ex.printStackTrace();
@@ -173,20 +223,30 @@ public class Visualiser implements ActionListener  {
 	public JPanel visualise(List<Node> predicateClauses){
 		SimpleGraphView sgv = new SimpleGraphView(predicateClauses); //We create our graph in here
 		// The Layout<V, E> is parameterized by the vertex and edge types
-	//	Layout<Node, String> layout = new CircleLayout<>(sgv.graph);
-	//	Layout<Node, String> layout = new FRLayout<>(sgv.graph);
-	//	Layout<Node, String> layout = new FRLayout2<>(sgv.graph);
+//		Layout<Node, String> layout = new CircleLayout<>(sgv.graph);
+//		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
+//		FRLayout2<Node, String> layout = new FRLayout2<>(sgv.graph);
 		Layout<Node, String> layout = new ISOMLayout<>(sgv.graph);
+//		
+//		SpringLayout<Node, String> layout = new SpringLayout<>(sgv.graph);
+//		Layout<Node, String> layout = new KKLayout<>(sgv.graph);
+//		Layout<Node, String> layout = new DAGLayout<>(sgv.graph);
 		
-	//	Layout<Node, String> layout = new SpringLayout<>(sgv.graph);
-	//	Layout<Node, String> layout = new KKLayout<>(sgv.graph);
-	//	Layout<Node, String> layout = new DAGLayout<>(sgv.graph);
+		//-----FRLayout configuration------//
+//		layout.setRepulsionMultiplier(0.7);
+//		layout.setMaxIterations(10000000);
+//		layout.setRepulsionMultiplier(1);
+		//-----FRLayout configuration------//
+
 		
-		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets the initial size of the space
+//		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets the initial size of the space
+		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
 		// The BasicVisualizationServer<V,E> is parameterized by the edge types
 //		BasicVisualizationServer<Node,String> vv = new BasicVisualizationServer<Node,String>(layout);
-		VisualizationViewer<Node,String> vv = new VisualizationViewer<Node,String>(layout);
-		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); //Sets the viewing area size
+		VisualizationViewer<Node,String> vv = new VisualizationViewer<Node,String>(layout, new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+//		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH - 500, LAYOUT_HEIGHT)); //Sets the viewing area size
+		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+//		vv.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT - 100)); //Sets the viewing area size
 	//	vv.setPreferredSize(new Dimension(600, 600)); //Sets the viewing area size
 	//	vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
 		 // Set up a new stroke Transformer for the edges
@@ -198,25 +258,29 @@ public class Visualiser implements ActionListener  {
 			}
 		};
 		
+		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, String>());
+//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Orthogonal<Node, String>());
 //		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
 //		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
 	
+//		vv.getRenderContext().setLabelOffset(-5);
 		
 		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<String, String>() {
             public String transform(String e) {
-            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
-            		return e.replaceAll("\\d","");            
-            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
-            		if(e.split("_")[1].startsWith("fromFunctor")){
-            			return "";
-            		}else{
-            			return e.split("_")[0];
-            		}
-            	}else if(e.startsWith("clauseHeadListArg")){
-            		return "";
-            	}else{ //Just variables
-            		return e;
-            	}
+//            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
+//            		return e.replaceAll("\\d","");            
+//            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
+//            		if(e.split("_")[1].startsWith("fromFunctor")){
+//            			return "";
+//            		}else{
+//            			return e.split("_")[0];
+//            		}
+//            	}else if(e.startsWith("clauseHeadListArg")){
+//            		return "";
+//            	}else{ //Just variables
+//            		return e;
+//            	}
+            	return e.split("_")[0];
             }
         });
 					
@@ -229,7 +293,6 @@ public class Visualiser implements ActionListener  {
 		
 		
 		
-		vv.getRenderContext().setLabelOffset(15);
 		 
 		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, String>(5, 5, 0));
 		
@@ -244,18 +307,21 @@ public class Visualiser implements ActionListener  {
 	            setForeground(Color.black);
 	            
 	            Node n = (Node) vertex;
-	            if(n.isMainArg){
-	            	this.setText(n.mainArgNo + ". " + this.getText());
-	            }
+//	            if(n.isMainArg){
+//	            	this.setText(n.mainArgNo + ". " + this.getText());
+//	            }
 	            
-	            if(n.getNodeType() == Node.TYPE.Functor){
-	            	this.setText(this.getText() + "()");
-	            }
-	            
+//	            if(n.getNodeType() == Node.TYPE.Functor){
+//	            	this.setText(this.getText() + "()");
+//	            }
+//	            
 	            if(!n.isMainArg && n.getNodeType() == Node.TYPE.Variable){
 	            	this.setText("<html><br>" + this.getText() + "</html>");
 	            }
-	            	
+	            
+//	            vv.getGraphics().setColor(Color.blue);
+//	            vv.getGraphics().fillRect(this.getX(), this.getY(), 10, 10);	           
+	            
 	            return this;
 	        }
 	        
@@ -264,11 +330,12 @@ public class Visualiser implements ActionListener  {
 	 // Transformer maps the vertex number to a vertex property
 	    Transformer<Node,Paint> vertexColor = new Transformer<Node, Paint>() {
 	        public Paint transform(Node node){
-	        	return node.getNodeColor();
+//	        	return node.getNodeColor();
+	        	return Color.white;
 	        }
 	    };
 	    
-	    Transformer<Node,Shape> vertexSize = new Transformer<Node, Shape>(){
+	    Transformer<Node,Shape> vertexShape = new Transformer<Node, Shape>(){
 	        public Shape transform(Node i){
 	        	System.out.println(i.getClass().getTypeName());
 	        	Shape shape = null;
@@ -276,9 +343,11 @@ public class Visualiser implements ActionListener  {
 	        	
 	        	
 	        	if(i.isMainArg){
-	        		int radius = 35;
+	        		int radius = 30;
 	        		shape = new Ellipse2D.Double(-15, -15, radius, radius);
-	        	}else if(nodeType.equals("Visual.ListOperatorNode") || nodeType.equals("Visual.FunctorNode")){
+	        	}else if(nodeType.equals("Visual.ListOperatorNode")){
+	        		shape = new Rectangle(-15, -15, 22, 22);
+	        	}else if(nodeType.equals("Visual.FunctorNode")){
 	//        		shape = new Rectangle(-15, -15, 20, 20);
 	        		int width = (i.getNodeName().length() < 5) ? 5 : i.getNodeName().length(); // so the node doesn't look too small.        		
 	        		width = width > 10 ? 10 : width; //enforce max rectangle width.
@@ -291,13 +360,17 @@ public class Visualiser implements ActionListener  {
 	        	}else if(nodeType.equals("Visual.OperatorNode")){
 	        		shape = new Rectangle(-15, -15, 20, 20);
 	        	}else if(nodeType.equals("Visual.VariableNode")){
-					final GeneralPath p0 = new GeneralPath();
-					int sizeFactor = 10;
-					p0.moveTo(0.0f, -sizeFactor); //start at point 1
-					p0.lineTo(sizeFactor*2, sizeFactor); //go to point 2
-					p0.lineTo(-sizeFactor*2, sizeFactor); //go to point 3
-					p0.closePath();
-	        		shape = p0;
+	        		if(i.nodesFrom.size() + i.nodesTo.size() >= 3){ // This VariableNode now becomes a Junction.
+	        			shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);	   	        			
+	        		}else{
+						final GeneralPath p0 = new GeneralPath();
+						int sizeFactor = 10;
+						p0.moveTo(0.0f, -sizeFactor); //start at point 1
+						p0.lineTo(sizeFactor*2, sizeFactor); //go to point 2
+						p0.lineTo(-sizeFactor*2, sizeFactor); //go to point 3
+						p0.closePath();
+		        		shape = p0;
+	        		}
 	        	}else{
 	        		shape = new Ellipse2D.Double(-15, -15, 20, 20);
 	        	}
@@ -307,14 +380,81 @@ public class Visualiser implements ActionListener  {
 	            
 	        }
 	    };
-	    vv.getRenderContext().setVertexFillPaintTransformer(vertexColor);
-	    vv.getRenderContext().setVertexShapeTransformer(vertexSize);    
-	    vv.getRenderContext().setVertexLabelRenderer(vertexLabelRenderer);
-	    vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller<>());
 	    
+	    Transformer<Node, Icon> vertexIcon = new Transformer<Node, Icon>(){
+
+			@Override
+			public Icon transform(Node node) {
+				// TODO Auto-generated method stub
+				try{
+					if(node.isMainArg){
+	//					return new ImageIcon("./colours/argumentArrows.svg");
+	//					JSVGCanvas svg = new JSVGCanvas();
+	//			        svg.setURI("file:./colours/argumentArrows.svg");
+						
+				        SvgImage svgimage = new SvgImage(new URL("file:./colours/5.svg"));
+	//					return new ImageIcon("./colours/green.png");
+				        return new ImageIcon(svgimage.getImage(45, 45));
+						
+					}else if(node.getNodeType() == Node.TYPE.ListOperator){
+//						SvgImage svgimage = new SvgImage(new URL("file:./colours/listProcessor.svg"));
+//						return new ImageIcon(svgimage.getImage(45, 45));
+						ImageIcon icon = new ImageIcon("./colours/listProcessor.png");
+						System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
+//						return icon;
+						return new Icon() {
+			                public int getIconHeight() {
+			                    return 45;
+			                }
+
+			                public int getIconWidth() {
+			                    return 45;
+			                }
+			                
+			                int offset = 6;
+			                public void paintIcon(Component c, Graphics g, int x, int y) {
+			                    g.drawImage(icon.getImage(), x - offset, y - offset - 3, getIconWidth(), getIconHeight(), null);
+			                }
+			            };
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				
+				return null;
+			}
+	    	
+	    };
+
+	    Transformer<Node, String> vertexLabelTransformer = new Transformer<Node, String>(){
+
+			@Override
+			public String transform(Node node) {
+				// TODO Auto-generated method stub
+				if(node.getNodeType() == Node.TYPE.ListOperator){
+					return null;
+				}else{
+					return node.getNodeName();
+				}
+			}
+	    	
+	    };
+	    
+	    vv.getRenderContext().setVertexFillPaintTransformer(vertexColor);
+	    vv.getRenderContext().setVertexShapeTransformer(vertexShape);    
+	    vv.getRenderContext().setVertexLabelRenderer(vertexLabelRenderer);
+//	    vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller<>());
+	    vv.getRenderContext().setVertexLabelTransformer(vertexLabelTransformer);
+	    vv.getRenderContext().setVertexIconTransformer(vertexIcon);
+	    
+
+        vv.getRenderer().setVertexRenderer(new MultiVertexRenderer<>());
+        
 	    vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
 	   
 	    
+	    
+//	    vv.getRenderContext().
 	    
 //	    vv.addPreRenderPaintable(new VisualizationViewer.Paintable(){
 //	        public void paint(Graphics g) {
@@ -366,27 +506,27 @@ public class Visualiser implements ActionListener  {
 //	
 //	    
 	    
-	    vv.addGraphMouseListener(new GraphMouseListener<Node>() {
-			
-			@Override
-			public void graphReleased(Node arg0, MouseEvent arg1) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void graphPressed(Node arg0, MouseEvent arg1) {
-				// TODO Auto-generated method stub
-				System.out.println("pressed");System.out.println(arg0);
-				
-			}
-			
-			@Override
-			public void graphClicked(Node arg0, MouseEvent arg1) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+//	    vv.addGraphMouseListener(new GraphMouseListener<Node>() {
+//			
+//			@Override
+//			public void graphReleased(Node arg0, MouseEvent arg1) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//			
+//			@Override
+//			public void graphPressed(Node arg0, MouseEvent arg1) {
+//				// TODO Auto-generated method stub
+//				System.out.println("pressed");System.out.println(arg0);
+//				
+//			}
+//			
+//			@Override
+//			public void graphClicked(Node arg0, MouseEvent arg1) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//		});
 	    
 		return vv;
 	}

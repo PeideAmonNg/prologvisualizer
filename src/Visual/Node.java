@@ -6,12 +6,18 @@ import java.util.List;
 
 public abstract class Node {
 	
+	
 	protected String node;
-	public List<Node> nodesTo = new ArrayList<>();
-	public List<Node> nodesFrom = new ArrayList<>();
+//	public List<Node> nodesTo = new ArrayList<>();
+//	public List<Node> nodesFrom = new ArrayList<>();
+	public List<Edge> nodesTo = new ArrayList<>();
+	public List<Edge> nodesFrom = new ArrayList<>();
+	
 	public enum TYPE {Functor, ListOperator, MainArgument, Operator, Variable};
 	public boolean isMainArg;
 	public int mainArgNo;
+	
+	
 	
 	public Node(String node){
 		this.node = node;
@@ -34,12 +40,12 @@ public abstract class Node {
 		this.node = node;
 	}
 	
-	public void addToNode(Node node){
-		this.nodesTo.add(node);
+	public void addToNode(String edgeLabel, Node node){
+		this.nodesTo.add(new Edge(edgeLabel, this, node));
 	}
 	
-	public void addFromNode(Node node){
-		this.nodesFrom.add(node);
+	public void addFromNode(String edgeLabel, Node node){
+		this.nodesFrom.add(new Edge(edgeLabel, node, this));
 	}
 	
 	public static Node getExistingNode(List<Node> nodes, String name){
@@ -52,6 +58,25 @@ public abstract class Node {
 		return null;
 	}
 	
+	public Edge getFromNodeEdge(Node node) throws Exception{
+		for(Edge e : this.nodesFrom){
+			if(e.fromNode == node){
+				return e;
+			}
+		}
+		throw new Exception("no fromNode of the name");
+	
+	}
+	
+	public Edge getToNodeEdge(Node node) throws Exception{
+		for(Edge e : this.nodesTo){
+			if(e.toNode == node){
+				return e;
+			}
+		}
+		throw new Exception("no toNode of the name");
+	
+	}
 	
 	@Override
 	public String toString(){

@@ -12,6 +12,7 @@ import com.igormaznitsa.prologparser.terms.PrologList;
 import com.igormaznitsa.prologparser.terms.PrologStructure;
 import com.igormaznitsa.prologparser.terms.PrologTermType;
 
+import Visual.Edge;
 import Visual.FunctorNode;
 import Visual.ListOperatorNode;
 import Visual.MainArgumentNode;
@@ -117,7 +118,7 @@ public class ParserProcess {
 		
 	}
 	
-	private void trimPaths(){
+	private void trimPaths() throws Exception{
 		List<Node> list = predicateClauses.get(0);
 		System.out.println("in trim path");
 		System.out.println(list.size());
@@ -126,10 +127,13 @@ public class ParserProcess {
 			Node node = list.get(i);
 			
 			if(node.nodesFrom.size() == 1 && node.nodesTo.size() == 1){
-				Node from = node.nodesFrom.get(0);
-				Node to = node.nodesTo.get(0);
-				from.nodesTo.set(from.nodesTo.indexOf(node), to);
-				to.nodesFrom.set(to.nodesFrom.indexOf(node), from);
+				Node from = node.nodesFrom.get(0).fromNode;
+				Node to = node.nodesTo.get(0).toNode;
+				Edge fromNodeEdge = from.getToNodeEdge(node);
+				Edge toNodeEdge = to.getFromNodeEdge(node);
+				from.nodesTo.set(from.nodesTo.indexOf(fromNodeEdge), new Edge(node.getNodeName(), from, to));
+//				to.nodesFrom.set(to.nodesFrom.indexOf(node), from);
+				to.nodesFrom.set(to.nodesFrom.indexOf(toNodeEdge), new Edge(node.getNodeName(), from, to));
 				
 				nodesToRemove.add(node);
 			}
@@ -184,9 +188,9 @@ public class ParserProcess {
 							Node.TYPE.Variable, false);
 					Node arithmeticOpNode = traverseClauseBody(((PrologStructure) term).getElement(1), variableNode,
 							false);
-					variableNode.addFromNode(arithmeticOpNode);
+					variableNode.addFromNode("is", arithmeticOpNode);
 					
-					arithmeticOpNode.addToNode(variableNode);
+					arithmeticOpNode.addToNode("is", variableNode);
 
 					return variableNode;
 
@@ -212,11 +216,11 @@ public class ParserProcess {
 							Node rightNode = traverseClauseBody(((PrologStructure) term).getElement(1), null, false);
 							Node equalityNode = retrieveNode(((PrologStructure) term).getFunctor().getText(),
 									Node.TYPE.Operator, true);
-							equalityNode.addFromNode(leftNode);
-							equalityNode.addFromNode(rightNode);
+							equalityNode.addFromNode("leftOp", leftNode);
+							equalityNode.addFromNode("rightOp", rightNode);
 							
-							leftNode.addToNode(equalityNode);
-							rightNode.addToNode(equalityNode);
+							leftNode.addToNode("leftOp", equalityNode);
+							rightNode.addToNode("rightOp", equalityNode);
 
 							return equalityNode;
 					}else{
@@ -236,11 +240,11 @@ public class ParserProcess {
 							Node.TYPE.Variable, false);
 					Node rightVarNode = traverseClauseBody(((PrologStructure) term).getElement(1), arithmeticOpNode,
 							false);
-					arithmeticOpNode.addFromNode(leftVarNode);
-					arithmeticOpNode.addFromNode(rightVarNode);
+					arithmeticOpNode.addFromNode("leftOp", leftVarNode);
+					arithmeticOpNode.addFromNode("rightOp", rightVarNode);
 					
-					leftVarNode.addToNode(arithmeticOpNode);
-					rightVarNode.addToNode(arithmeticOpNode);
+					leftVarNode.addToNode("leftOp", arithmeticOpNode);
+					rightVarNode.addToNode("rightOp", arithmeticOpNode);
 
 					return arithmeticOpNode;
 
@@ -294,9 +298,9 @@ public class ParserProcess {
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
 								Node varNode = retrieveNode(n.getNodeName(), Node.TYPE.Variable, true);
 								varNode.setMainArg(index + 1);
-								n.addFromNode(varNode);
+								n.addFromNode("is_" + (index+1), varNode);
 								
-								varNode.addToNode(n);
+								varNode.addToNode("is_" + (index+1), n);
 							}else{
 //								Node mainArgNode = retrieveNode("Arg", Node.TYPE.MainArgument, true);
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
@@ -318,11 +322,11 @@ public class ParserProcess {
 							
 							
 							if(nodeExists){
-								fNode.addFromNode(n);
-								n.addToNode(fNode);
+								fNode.addFromNode("arg" + (index+1), n);
+								n.addToNode("arg" + (index+1), fNode);
 							}else{
-								n.addFromNode(fNode);
-								fNode.addToNode(n);
+								n.addFromNode("arg" + (index+1), fNode);
+								fNode.addToNode("arg" + (index+1), n);
 							}
 							
 //							Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
@@ -345,11 +349,11 @@ public class ParserProcess {
 							n.setNodeName("!" + n.getNodeName());
 						}else{
 							if(nodeExists){
-								fNode.addFromNode(n);
-								n.addToNode(fNode);
+								fNode.addFromNode("arg" + (index+1), n);
+								n.addToNode("arg" + (index+1), fNode);
 							}else{
-								n.addFromNode(fNode);
-								fNode.addToNode(n);
+								n.addFromNode("arg" + (index+1), fNode);
+								fNode.addToNode("arg" + (index+1), n);
 							}
 						}
 						
@@ -399,7 +403,6 @@ public class ParserProcess {
 			PrologList list = ((PrologList) term);
 			Node listNode = retrieveNode(null, Node.TYPE.ListOperator, true);
 		
-			System.out.println("need to implement list arg");
 			Node listHeadNode, listTailNode;
 			
 			
@@ -407,13 +410,13 @@ public class ParserProcess {
 				listHeadNode = retrieveNode(list.getElement(0).getText(), Node.TYPE.Variable, false);
 				
 				if(isPartOfClauseHead){
-					listHeadNode.addFromNode(listNode);
-					listNode.addToNode(listHeadNode);
+					listHeadNode.addFromNode("head", listNode);
+					listNode.addToNode("head", listHeadNode);
 										
 				}else{
-					listNode.addFromNode(listHeadNode);
+					listNode.addFromNode("head", listHeadNode);
 					
-					listHeadNode.addToNode(listNode);
+					listHeadNode.addToNode("head", listNode);
 				}
 			}
 			
@@ -423,12 +426,12 @@ public class ParserProcess {
 //				listTailNode = retrieveNode(list.getElement(1).getText(), Node.TYPE.ListOperator, true);
 				
 				if(isPartOfClauseHead){
-					listTailNode.addFromNode(listNode);
-					listNode.addToNode(listTailNode);
+					listTailNode.addFromNode("tail", listNode);
+					listNode.addToNode("tail", listTailNode);
 				}else{
-					listNode.addFromNode(listTailNode);
+					listNode.addFromNode("tail", listTailNode);
 					
-					listTailNode.addToNode(listNode);					
+					listTailNode.addToNode("tail", listNode);					
 				}
 			}
 			
