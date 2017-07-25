@@ -33,6 +33,7 @@ import javax.swing.JTextField;
 
 import org.apache.commons.collections15.Transformer;
 
+import Visual.FunctorNode;
 import Visual.Node;
 import Visual.SimpleGraphView;
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
@@ -227,10 +228,11 @@ public class Visualiser implements ActionListener  {
 //		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
 //		FRLayout2<Node, String> layout = new FRLayout2<>(sgv.graph);
 		Layout<Node, String> layout = new ISOMLayout<>(sgv.graph);
+		layout.initialize();
 //		
 //		SpringLayout<Node, String> layout = new SpringLayout<>(sgv.graph);
 //		Layout<Node, String> layout = new KKLayout<>(sgv.graph);
-//		Layout<Node, String> layout = new DAGLayout<>(sgv.graph);
+//		DAGLayout<Node, String> layout = new DAGLayout<>(sgv.graph);
 		
 		//-----FRLayout configuration------//
 //		layout.setRepulsionMultiplier(0.7);
@@ -238,6 +240,7 @@ public class Visualiser implements ActionListener  {
 //		layout.setRepulsionMultiplier(1);
 		//-----FRLayout configuration------//
 
+		
 		
 //		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets the initial size of the space
 		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
@@ -356,7 +359,12 @@ public class Visualiser implements ActionListener  {
 	        		width += nodeType.equals("Visual.FunctorNode") ? 3 : 0; //for the extra "()" 
 	        		width += i.isMainArg ? 3: 0; //for the extra arg number at the start.
 	        		
-	        		shape = new Rectangle(-15, -15, width, 20);
+	        		if(FunctorNode.isListPredicate(i.getNodeName())){
+	        			shape = new Rectangle(-15, -15, width, 25);
+	        		}else{
+	        			shape = new Rectangle(-15, -15, width, 20);
+	        		}
+	        		
 	        	}else if(nodeType.equals("Visual.OperatorNode")){
 	        		shape = new Rectangle(-15, -15, 20, 20);
 	        	}else if(nodeType.equals("Visual.VariableNode")){
@@ -416,7 +424,34 @@ public class Visualiser implements ActionListener  {
 			                    g.drawImage(icon.getImage(), x - offset, y - offset - 3, getIconWidth(), getIconHeight(), null);
 			                }
 			            };
+					}else if(node.getNodeType() == Node.TYPE.Functor){
+						String functor = node.getNodeName();
+						
+						if(FunctorNode.isListPredicate(functor)){
+//							ImageIcon icon = new ImageIcon("./colours/not_member.png");
+							ImageIcon icon = new ImageIcon(FunctorNode.getIconPath(functor));
+							System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
+//							return icon;
+							return new Icon() {
+				                public int getIconHeight() {
+//				                    return 204;
+				                	return 51;
+				                }
+
+				                public int getIconWidth() {
+//				                    return 244;
+				                	return 61;
+				                }
+				                
+				                int offset = 6;
+				                public void paintIcon(Component c, Graphics g, int x, int y) {
+				                    g.drawImage(icon.getImage(), x , y - offset, getIconWidth(), getIconHeight(), null);
+				                }
+				            };
+						}
+						
 					}
+					
 				}catch(Exception e){
 					e.printStackTrace();
 				}
@@ -431,7 +466,8 @@ public class Visualiser implements ActionListener  {
 			@Override
 			public String transform(Node node) {
 				// TODO Auto-generated method stub
-				if(node.getNodeType() == Node.TYPE.ListOperator){
+				Node.TYPE type = node.getNodeType();
+				if(type == Node.TYPE.ListOperator || (FunctorNode.isListPredicate(node.getNodeName()))){
 					return null;
 				}else{
 					return node.getNodeName();

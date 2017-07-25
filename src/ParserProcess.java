@@ -263,25 +263,12 @@ public class ParserProcess {
 				System.out.println(((PrologStructure) term).getArity());
 //				System.out.println("^^^^^Fly " + ((PrologStructure) term).getElement(1).getText());
 				
-				Node fNode = null;
-				
-				if (parentNode == null){
-					System.out.println("in traverseClauseBody, parentNode is null");
-				}else{
-					System.out.println("in traverseClauseBody, parentNode is" + parentNode.getClass().getName());
-				}
-				
+				Node fNode = null;				
 				if (!((PrologStructure) term).getFunctor().getText().equals("not") && (parentNode == null || !isPartOfClauseHead)) { 
 					fNode = retrieveNode(((PrologStructure) term).getFunctor().getText(), Node.TYPE.Functor, true);
 					System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 				}
-				
-				if (parentNode == null){
-					System.out.println("about to loop the parameters, the parentNode is null");
-				}else{
-					System.out.println("about to loop the parameters, the parentNode is " + parentNode.getClass().getName());
-				}
-				
+							
 				
 				final int arity = ((PrologStructure) term).getArity();
 				int index = 0;
@@ -321,7 +308,7 @@ public class ParserProcess {
 							Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
 							
 							
-							if(nodeExists){
+							if(nodeExists){														
 								fNode.addFromNode("arg" + (index+1), n);
 								n.addToNode("arg" + (index+1), fNode);
 							}else{
@@ -349,11 +336,26 @@ public class ParserProcess {
 							n.setNodeName("!" + n.getNodeName());
 						}else{
 							if(nodeExists){
-								fNode.addFromNode("arg" + (index+1), n);
-								n.addToNode("arg" + (index+1), fNode);
+								String functor = ((PrologStructure) term).getFunctor().getText();
+								if(functor.equals("member")){
+									String label = index == 0 ? "element_" : "set_";
+									fNode.addFromNode(label + (index+1), n);
+									n.addToNode(label + (index+1), fNode);
+								}else{
+									fNode.addFromNode("arg" + (index+1), n);
+									n.addToNode("arg" + (index+1), fNode);
+								}
+								
 							}else{
-								n.addFromNode("arg" + (index+1), fNode);
-								fNode.addToNode("arg" + (index+1), n);
+								String functor = ((PrologStructure) term).getFunctor().getText();
+								if(functor.equals("member")){
+									String label = index == 0 ? "element_" : "set_";
+									n.addFromNode(label + (index+1), fNode);
+									fNode.addToNode(label + (index+1), n);
+								}else{
+									n.addFromNode("arg" + (index+1), fNode);
+									fNode.addToNode("arg" + (index+1), n);
+								}
 							}
 						}
 						
