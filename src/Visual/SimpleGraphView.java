@@ -7,7 +7,7 @@ import edu.uci.ics.jung.graph.util.EdgeType;
 
 public class SimpleGraphView {
 
-    public final Graph<Node, String> graph;
+    public final Graph<Node, Edge> graph;
 
     public SimpleGraphView(List<Node> nodes) {    	
 //    	AbstractGraph<V,E>	Abstract implementation of the Graph interface.
@@ -45,7 +45,13 @@ public class SimpleGraphView {
 //    				
 //    			}
 //    			if(edge.toNode.isMainArg){
-    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.DIRECTED);
+    			if(edge.isDirected){
+//    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.DIRECTED);
+    				graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.DIRECTED);
+    			}else{
+//    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+    				graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+    			}
 //    			}else{
 //    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
 //    			}

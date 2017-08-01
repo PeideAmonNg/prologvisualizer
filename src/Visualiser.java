@@ -33,6 +33,7 @@ import javax.swing.JTextField;
 
 import org.apache.commons.collections15.Transformer;
 
+import Visual.Edge;
 import Visual.FunctorNode;
 import Visual.Node;
 import Visual.SimpleGraphView;
@@ -42,6 +43,7 @@ import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.Layer;
+import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.AbstractModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
@@ -227,7 +229,7 @@ public class Visualiser implements ActionListener  {
 //		Layout<Node, String> layout = new CircleLayout<>(sgv.graph);
 //		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
 //		FRLayout2<Node, String> layout = new FRLayout2<>(sgv.graph);
-		Layout<Node, String> layout = new ISOMLayout<>(sgv.graph);
+		Layout<Node, Edge> layout = new ISOMLayout<>(sgv.graph);
 		layout.initialize();
 //		
 //		SpringLayout<Node, String> layout = new SpringLayout<>(sgv.graph);
@@ -246,7 +248,7 @@ public class Visualiser implements ActionListener  {
 		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
 		// The BasicVisualizationServer<V,E> is parameterized by the edge types
 //		BasicVisualizationServer<Node,String> vv = new BasicVisualizationServer<Node,String>(layout);
-		VisualizationViewer<Node,String> vv = new VisualizationViewer<Node,String>(layout, new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+		VisualizationViewer<Node,Edge> vv = new VisualizationViewer<Node,Edge>(layout, new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
 //		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH - 500, LAYOUT_HEIGHT)); //Sets the viewing area size
 		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
 //		vv.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT - 100)); //Sets the viewing area size
@@ -261,15 +263,18 @@ public class Visualiser implements ActionListener  {
 			}
 		};
 		
-		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, String>());
+		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
 //		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Orthogonal<Node, String>());
 //		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
 //		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
 	
 //		vv.getRenderContext().setLabelOffset(-5);
 		
-		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<String, String>() {
-            public String transform(String e) {
+		
+//		vv.getRenderer().setEdgeLabelRenderer(new MyRenderer());
+		
+		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
+            public String transform(Edge e) {
 //            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
 //            		return e.replaceAll("\\d","");            
 //            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
@@ -283,13 +288,17 @@ public class Visualiser implements ActionListener  {
 //            	}else{ //Just variables
 //            		return e;
 //            	}
-            	return e.split("_")[0];
+            	if(e.label.startsWith("Out_")){
+            		return "Out_" + e.label.split("_")[1];
+            	}else{
+            		return e.label.split("_")[0];
+            	}
             }
         });
 					
-		vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, String>, String>, Number>() {
+		vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, Edge>, Edge>, Number>() {
 			@Override
-			public Number transform(Context<Graph<Node, String>, String> arg0) {          
+			public Number transform(Context<Graph<Node, Edge>, Edge> arg0) {          
                 return 0.5; //halfway on an edge.
 			}
         });
@@ -297,7 +306,7 @@ public class Visualiser implements ActionListener  {
 		
 		
 		 
-		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, String>(5, 5, 0));
+		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, Edge>(5, 5, 0));
 		
 	    DefaultVertexLabelRenderer vertexLabelRenderer = new DefaultVertexLabelRenderer(Color.black){
 	        @Override
@@ -571,6 +580,19 @@ public class Visualiser implements ActionListener  {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		 	
+		
+	}
+	
+	static class MyRenderer implements Renderer.EdgeLabel<Node, Edge>{
+
+		@Override
+		public void labelEdge(RenderContext<Node, Edge> context, Layout<Node, Edge> layout, Edge edge, String label) {
+			// TODO Auto-generated method stub
+			System.out.println("label ---> " + label);
+			System.out.println(edge);
+			
+			
+		}
 		
 	}
 

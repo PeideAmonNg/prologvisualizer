@@ -122,18 +122,21 @@ public class ParserProcess {
 		List<Node> list = predicateClauses.get(0);
 		System.out.println("in trim path");
 		System.out.println(list.size());
+		
 		List<Node> nodesToRemove = new ArrayList<>();
+		
+		// Removing VariableNode with only one incoming edge and one outgoing edge.
 		for(int i = 0; i < list.size(); i++){
 			Node node = list.get(i);
 			
-			if(node.nodesFrom.size() == 1 && node.nodesTo.size() == 1){
+			if(node.getNodeType() == Node.TYPE.Variable && !node.isMainArg && node.nodesFrom.size() == 1 && node.nodesTo.size() == 1){
 				Node from = node.nodesFrom.get(0).fromNode;
 				Node to = node.nodesTo.get(0).toNode;
 				Edge fromNodeEdge = from.getToNodeEdge(node);
 				Edge toNodeEdge = to.getFromNodeEdge(node);
-				from.nodesTo.set(from.nodesTo.indexOf(fromNodeEdge), new Edge(node.getNodeName(), from, to));
+				from.nodesTo.set(from.nodesTo.indexOf(fromNodeEdge), new Edge(node.getNodeName(), from, to, true));
 //				to.nodesFrom.set(to.nodesFrom.indexOf(node), from);
-				to.nodesFrom.set(to.nodesFrom.indexOf(toNodeEdge), new Edge(node.getNodeName(), from, to));
+				to.nodesFrom.set(to.nodesFrom.indexOf(toNodeEdge), new Edge(node.getNodeName(), from, to, true));
 				
 				nodesToRemove.add(node);
 			}
@@ -142,6 +145,32 @@ public class ParserProcess {
 		for(Node node : nodesToRemove){
 			list.remove(node);
 		}
+		
+		nodesToRemove = new ArrayList<>();
+		
+		// Removing variables shared by 
+		for(int i = 0; i < list.size(); i++){
+			Node node = list.get(i);
+			
+			if(node.getNodeType() == Node.TYPE.Variable && !node.isMainArg && node.nodesFrom.size() == 2 && node.nodesTo.size() == 0){
+				Node n1 = node.nodesFrom.get(0).fromNode;
+				Node n2 = node.nodesFrom.get(1).fromNode;
+				
+				Edge edge1 = n1.getToNodeEdge(node);
+				Edge edge2 = n2.getToNodeEdge(node);
+				
+				n1.nodesTo.set(n1.nodesTo.indexOf(edge1), new Edge(node.getNodeName(), n1, n2, false));
+				n2.nodesTo.remove(edge2);
+				n2.nodesFrom.add(new Edge(node.getNodeName(), n1, n2, false));
+				
+				nodesToRemove.add(node);
+			}		
+		}
+		
+		for(Node node : nodesToRemove){
+			list.remove(node);
+		}
+		
 	}
 	
 	// Recursively traverse clauses in the body of the current outer clause being parsed.
@@ -285,9 +314,9 @@ public class ParserProcess {
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
 								Node varNode = retrieveNode(n.getNodeName(), Node.TYPE.Variable, true);
 								varNode.setMainArg(index + 1);
-								n.addFromNode("is_" + (index+1), varNode);
+								n.addFromNode("list_" + (index+1), varNode);
 								
-								varNode.addToNode("is_" + (index+1), n);
+								varNode.addToNode("list_" + (index+1), n);
 							}else{
 //								Node mainArgNode = retrieveNode("Arg", Node.TYPE.MainArgument, true);
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
@@ -320,12 +349,16 @@ public class ParserProcess {
 //							fNode.addFromNode(n);
 						}
 					} else { // in clause body.
-						System.out.println("functor that is not in the clause head.");
+						System.out.println("functor is not in the clause head, i.e. in the clause body.");
 						
 						boolean nodeExists = false;
 						AbstractPrologTerm currentArg = ((PrologStructure) term).getElement(index);
 						if(currentArg.getType() == PrologTermType.VAR){
-							nodeExists = nodeExists(((PrologStructure) term).getElement(index).getText());
+							if(currentArg.getText().startsWith("Out_")){
+								nodeExists = false;
+							}else{
+								nodeExists = nodeExists(((PrologStructure) term).getElement(index).getText());
+							}
 						}else if(currentArg.getType() == PrologTermType.LIST){
 							nodeExists = true;
 						}
@@ -342,8 +375,16 @@ public class ParserProcess {
 									fNode.addFromNode(label + (index+1), n);
 									n.addToNode(label + (index+1), fNode);
 								}else{
-									fNode.addFromNode("arg" + (index+1), n);
-									n.addToNode("arg" + (index+1), fNode);
+//									fNode.addFromNode("arg" + (index+1), n);
+//									n.addToNode("arg" + (index+1), fNode);
+									String edgeLabel = n.getNodeName();
+									
+									if(edgeLabel.startsWith("Out_")){
+										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
+									}
+									
+									fNode.addFromNode(edgeLabel + "_" + (index+1), n);
+									n.addToNode(edgeLabel + "_" + (index+1), fNode);
 								}
 								
 							}else{
@@ -353,8 +394,15 @@ public class ParserProcess {
 									n.addFromNode(label + (index+1), fNode);
 									fNode.addToNode(label + (index+1), n);
 								}else{
-									n.addFromNode("arg" + (index+1), fNode);
-									fNode.addToNode("arg" + (index+1), n);
+//									n.addFromNode("arg" + (index+1), fNode);
+//									fNode.addToNode("arg" + (index+1), n);
+									String edgeLabel = n.getNodeName();
+									
+									if(edgeLabel.startsWith("Out_")){
+										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
+									}
+									n.addFromNode(edgeLabel + "_" + (index+1), fNode);
+									fNode.addToNode(edgeLabel + "_" + (index+1), n);
 								}
 							}
 						}
@@ -393,6 +441,8 @@ public class ParserProcess {
 			if (term.getText().equals("_")) {
 				System.out.println("_______________________________________________________________________________________________");
 				return retrieveNode(term.getText(), Node.TYPE.Variable, true);
+			} else if(term.getText().startsWith("Out_")){
+				return retrieveNode(term.getText().substring(4, term.getText().length()), Node.TYPE.Variable, false);
 			} else {
 				return retrieveNode(term.getText(), Node.TYPE.Variable, false);
 			}

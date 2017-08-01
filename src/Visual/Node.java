@@ -41,11 +41,11 @@ public abstract class Node {
 	}
 	
 	public void addToNode(String edgeLabel, Node node){
-		this.nodesTo.add(new Edge(edgeLabel, this, node));
+		this.nodesTo.add(new Edge(edgeLabel, this, node, true));
 	}
 	
 	public void addFromNode(String edgeLabel, Node node){
-		this.nodesFrom.add(new Edge(edgeLabel, node, this));
+		this.nodesFrom.add(new Edge(edgeLabel, node, this, true));
 	}
 	
 	public static Node getExistingNode(List<Node> nodes, String name){
