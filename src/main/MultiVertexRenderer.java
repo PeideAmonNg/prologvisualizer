@@ -1,3 +1,4 @@
+package main;
 
 import java.awt.Dimension;
 import java.awt.Paint;
@@ -21,7 +22,8 @@ import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
 public class MultiVertexRenderer<V,E> implements Renderer.Vertex<V,E>{
-
+	
+	@Override
 	public void paintVertex(RenderContext<V,E> rc, Layout<V,E> layout, V v) {
 	      Graph<V,E> graph = layout.getGraph();
 	        if (rc.getVertexIncludePredicate().evaluate(Context.<Graph<V,E>,V>getInstance(graph,v))) {

@@ -1,3 +1,4 @@
+package main;
 import java.util.List;
 
 // Examples of a Structure: 

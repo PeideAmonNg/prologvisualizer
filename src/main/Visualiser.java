@@ -1,3 +1,4 @@
+package main;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -5,6 +6,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Paint;
 import java.awt.Rectangle;
@@ -16,6 +18,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
@@ -51,6 +54,8 @@ import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingControl;
 import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
+import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
 
@@ -133,13 +138,13 @@ public class Visualiser implements ActionListener  {
 					JButton plus = new JButton("+");
 					plus.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
-							scaler.scale(vv, 1.1f, vv.getCenter());
+							scaler.scale(vv, 1.5f, vv.getCenter());
 						}
 					});
 					JButton minus = new JButton("-");
 					minus.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
-							scaler.scale(vv, 1 / 1.1f, vv.getCenter());
+							scaler.scale(vv, 1 / 1.5f, vv.getCenter());
 						}
 					});
 
@@ -201,10 +206,10 @@ public class Visualiser implements ActionListener  {
             
             try{
             	System.out.println("hello");
-	            Image gray = ImageIO.read(new File("./colours/gray.png"));
-	            Image rect = ImageIO.read(new File("./colours/rectangle.png"));
-	            Image tri = ImageIO.read(new File("./colours/triangle.png"));
-	            Image green = ImageIO.read(new File("./colours/green.png"));
+	            Image gray = ImageIO.read(new File("/colours/gray.png"));
+	            Image rect = ImageIO.read(new File("/colours/rectangle.png"));
+	            Image tri = ImageIO.read(new File("/colours/triangle.png"));
+	            Image green = ImageIO.read(new File("/colours/green.png"));
 	            
 	            System.out.println("after pink");
 	            
@@ -266,35 +271,137 @@ public class Visualiser implements ActionListener  {
 		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
 //		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Orthogonal<Node, String>());
 //		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
-//		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
 	
 //		vv.getRenderContext().setLabelOffset(-5);
 		
+		DefaultEdgeLabelRenderer edgeLabelRenderer = new DefaultEdgeLabelRenderer(Color.black){
+	        @Override
+	        public <E> Component getEdgeLabelRendererComponent(
+	            JComponent vv, Object value, Font font, 
+	            boolean isSelected, E edge) 
+	        {
+	            super.getEdgeLabelRendererComponent(
+	                vv, value, font, isSelected, edge);
+	            this.setForeground(Color.BLUE);	            
+	            
+	            VisualizationViewer vvv = ((VisualizationViewer)vv);
+	            Layout<Node, Edge> layout = vvv.getGraphLayout();
+	            Graph g = vvv.getGraphLayout().getGraph();
+	            Object[] ee = g.getEdges().toArray();
+//	            Edge e = (Edge) ee[0];
+	            
+	            Edge e = (Edge) edge;
+	            Node fromNode = e.fromNode;
+	            Node toNode = e.toNode;
+	            
+	            Point2D from = layout.transform(e.fromNode);
+	            Point2D to = layout.transform(e.toNode);
+	            
+	            System.err.println("------------------------------>" + from);
+	            
+	            double x1 = from.getX(), y1 = from.getY(), x2 = to.getX(), y2 = to.getY();
+	            double distance = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+	            
+	            String fromLabel = e.fromLabel, toLabel = e.toLabel;
+	            
+	            if(fromLabel.contains("_")){
+	            	fromLabel = fromLabel.split("_")[0];
+	            }
+	            
+	            if(toLabel.contains("_")){
+	            	toLabel = toLabel.split("_")[0];
+	            }
+	            
+	            System.err.println("---" + fromLabel + " --- " + toLabel);
+	            
+	            double fromLabelSize = e.fromLabel.length() * 5.0, toLabelSize = e.toLabel.length() * 5.0; 
+	            
+	            int space = (int) ((distance - (fromLabelSize + toLabelSize)) / 5.0);
+	            
+	            String spaceFiller = "";
+	            
+	            if(distance <= 250){
+	            	space = (int)(space * 0.7);
+	            }else if(distance <= 350){
+	            	space = (int)(space * 0.8);
+	            }
+	            
+	            for(int i = 0; i < space; i++){
+	            	spaceFiller += "&nbsp;";
+	            }
+	            
+	            
+	            if(x1 <= x2){
+	            	
+	            	this.setText("<html><strong><font color='red'>" + fromLabel + "</font></strong>" + spaceFiller +
+	            			"<strong><font color='blue'>" + toLabel + "</font></strong></html>");
+	            }else{
+	            	this.setText("<html><strong><font color='blue'>" + toLabel + "</font></strong>" + spaceFiller + 
+	            			"<strong><font color='red'>" + fromLabel + "</font></strong></html>");
+	            }
+	            
+	            	           
+//	            g2.setTransform(orig);
+//	            if(e.fromNode.getNodeName().startsWith("N") || e.fromNode.getNodeName().startsWith("List")){
+//	            	System.err.println("-----------------");
+//	            	System.err.println(distance);
+//	            	System.err.println(e.fromNode.getNodeName());
+//		            System.err.println(from);
+//	            }
+//	            
+	            
+//	            if(n.isMainArg){
+//	            	this.setText(n.mainArgNo + ". " + this.getText());
+//	            }
+	            
+//	            if(n.getNodeType() == Node.TYPE.Functor){
+//	            	this.setText(this.getText() + "()");
+//	            }
+//	            
+//	            if(!n.isMainArg && n.getNodeType() == Node.TYPE.Variable){
+//	            	this.setText("<html><br>" + this.getText() + "</html>");
+//	            }
+	            
+//	            this.setText("ariel");
+	            
+	            
+	            
+//	            vv.getGraphics().setColor(Color.blue);
+//	            vv.getGraphics().fillRect(this.getX(), this.getY(), 10, 10);	           
+	            
+	            return this;
+	        }
+	        
+	    };
+	    
+		vv.getRenderContext().setEdgeLabelRenderer(edgeLabelRenderer);
 		
-//		vv.getRenderer().setEdgeLabelRenderer(new MyRenderer());
-		
-		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
-            public String transform(Edge e) {
-//            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
-//            		return e.replaceAll("\\d","");            
-//            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
-//            		if(e.split("_")[1].startsWith("fromFunctor")){
-//            			return "";
-//            		}else{
-//            			return e.split("_")[0];
-//            		}
-//            	}else if(e.startsWith("clauseHeadListArg")){
-//            		return "";
-//            	}else{ //Just variables
-//            		return e;
+//		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
+//            public String transform(Edge e) {
+////            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
+////            		return e.replaceAll("\\d","");            
+////            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
+////            		if(e.split("_")[1].startsWith("fromFunctor")){
+////            			return "";
+////            		}else{
+////            			return e.split("_")[0];
+////            		}
+////            	}else if(e.startsWith("clauseHeadListArg")){
+////            		return "";
+////            	}else{ //Just variables
+////            		return e;
+////            	}
+//            	if(e.toLabel.startsWith("Out_")){
+//            		return "Out_" + e.toLabel.split("_")[1];
+//            	}else if(!e.fromLabel.equals("")){
+//            		return e.fromLabel;
+//            	}else{
+////            		return e.toLabel.split("_")[0];
+//            		return e.toLabel;
 //            	}
-            	if(e.label.startsWith("Out_")){
-            		return "Out_" + e.label.split("_")[1];
-            	}else{
-            		return e.label.split("_")[0];
-            	}
-            }
-        });
+//            }
+//        });
 					
 		vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, Edge>, Edge>, Number>() {
 			@Override
@@ -409,14 +516,22 @@ public class Visualiser implements ActionListener  {
 	//					JSVGCanvas svg = new JSVGCanvas();
 	//			        svg.setURI("file:./colours/argumentArrows.svg");
 						
-				        SvgImage svgimage = new SvgImage(new URL("file:./colours/5.svg"));
-	//					return new ImageIcon("./colours/green.png");
+						File file = new File("colours/5.svg");
+						System.err.println(file.getAbsolutePath());
+						URL url = Visualiser.class.getResource("/colours/5.svg");
+//						URL url = new URL("file:" + file.getAbsolutePath());
+						SvgImage svgimage = new SvgImage(url);
+//				        SvgImage svgimage = new SvgImage(new URL("file:/colours/5.svg"));
+//	//					return new ImageIcon("./colours/green.png");
 				        return new ImageIcon(svgimage.getImage(45, 45));
+				        
+
 						
 					}else if(node.getNodeType() == Node.TYPE.ListOperator){
 //						SvgImage svgimage = new SvgImage(new URL("file:./colours/listProcessor.svg"));
 //						return new ImageIcon(svgimage.getImage(45, 45));
-						ImageIcon icon = new ImageIcon("./colours/listProcessor.png");
+						URL url = Visualiser.class.getResource("/colours/listProcessor.png");
+						ImageIcon icon = new ImageIcon(url);
 						System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
 //						return icon;
 						return new Icon() {

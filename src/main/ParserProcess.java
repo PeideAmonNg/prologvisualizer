@@ -1,3 +1,4 @@
+package main;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -130,13 +131,27 @@ public class ParserProcess {
 			Node node = list.get(i);
 			
 			if(node.getNodeType() == Node.TYPE.Variable && !node.isMainArg && node.nodesFrom.size() == 1 && node.nodesTo.size() == 1){
+				System.err.println("-------------->  " + node.getNodeName());
 				Node from = node.nodesFrom.get(0).fromNode;
 				Node to = node.nodesTo.get(0).toNode;
 				Edge fromNodeEdge = from.getToNodeEdge(node);
 				Edge toNodeEdge = to.getFromNodeEdge(node);
-				from.nodesTo.set(from.nodesTo.indexOf(fromNodeEdge), new Edge(node.getNodeName(), from, to, true));
+				Edge newEdge = null;
+				
+				if(from.getNodeType() == Node.TYPE.ListOperator || to.getNodeType() == Node.TYPE.Operator){
+					System.err.println("-->" + node.getNodeName());
+					newEdge = new Edge(toNodeEdge.toLabel, from, to, true);
+					newEdge.fromLabel = node.getNodeName();
+					
+				}else{
+					newEdge = new Edge(toNodeEdge.toLabel, from, to, true);
+				}
+				
+				
+				
+				from.nodesTo.set(from.nodesTo.indexOf(fromNodeEdge), newEdge);
 //				to.nodesFrom.set(to.nodesFrom.indexOf(node), from);
-				to.nodesFrom.set(to.nodesFrom.indexOf(toNodeEdge), new Edge(node.getNodeName(), from, to, true));
+				to.nodesFrom.set(to.nodesFrom.indexOf(toNodeEdge), newEdge);
 				
 				nodesToRemove.add(node);
 			}
