@@ -6,9 +6,9 @@ import java.util.List;
 
 import Visual.Node.TYPE;
 
-public class OperatorNode extends Node {
+public class ArithmeticOperatorNode extends Node {
 	
-	public OperatorNode(String node){
+	public ArithmeticOperatorNode(String node){
 		super(node);
 	}
 	

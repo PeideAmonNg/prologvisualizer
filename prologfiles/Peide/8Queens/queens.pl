@@ -14,3 +14,4 @@ pick([H | Cls], Col, [H | Rest]) :- pick(Cls, Col, Rest).
 
 match(Row, Col, SW, SE) :- SW is Row-Col, SE is Row+Col.
 
+

@@ -2,7 +2,7 @@ package Visual;
 
 public class Edge {
 
-	public String fromLabel = "", toLabel = "";
+	public String fromLabel = "", centerLabel = "", toLabel = "";
 	public Node fromNode, toNode;
 	public boolean isDirected = true;
 	

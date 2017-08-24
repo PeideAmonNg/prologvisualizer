@@ -119,7 +119,7 @@ public class Parser {
 //			e.printStackTrace();
 //		}
 		
-		new ParserProcess();
+//		new ParserProcess(null);
 		new Visualiser();
 		
 //		SimpleGraphView sgv = new SimpleGraphView(); //We create our graph in here

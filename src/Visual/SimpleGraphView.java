@@ -55,8 +55,10 @@ public class SimpleGraphView {
 //    			}else{
 //    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
 //    			}
+    			
     		}
     	}
+    	
     	
 //    	if(nodes != null){
 //    		int id = 1;

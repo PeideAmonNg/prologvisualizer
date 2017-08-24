@@ -1,63 +1,45 @@
 package main;
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Paint;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Point2D;
 import java.io.File;
-import java.net.URL;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 
-import org.apache.commons.collections15.Transformer;
+import org.jdesktop.swingx.prompt.PromptSupport;
 
-import Visual.Edge;
-import Visual.FunctorNode;
 import Visual.Node;
 import Visual.SimpleGraphView;
-import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.Layer;
-import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.AbstractModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingControl;
-import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
-import edu.uci.ics.jung.visualization.decorators.EdgeShape;
-import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
-import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
-import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
-import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 public class Visualiser implements ActionListener  {
 	
@@ -67,130 +49,193 @@ public class Visualiser implements ActionListener  {
 	public static final int SCREEN_MARGIN = 10;
 	
 	public Visualiser(){
+		
+		EventQueue.invokeLater(new Runnable() {
+			@Override
+            public void run(){
+				JFrame frame = new JFrame("Prolog Visualiser");
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				
+			    JPanel container = new JPanel();
+				container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));		
+				container.setBackground(Color.WHITE);
+			    	   	
+		//		JPanel infoPanel = new InfoPanel(container);
+		//		infoPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, INFO_PANEL_HEIGHT));
+		//		infoPanel.setBackground(Color.WHITE);
+			    try{
+			    	UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			    	System.err.println(UIManager.getFont("TextField.font"));
+			    	System.err.println(UIManager.getFont("TextArea.font"));
+			    	UIManager.getDefaults().put("TextField.font", UIManager.getFont("TextArea.font"));
+			    }catch(Exception e){
+			    	
+			    }
+				
+				JTextField metaClauseField = new JTextField(11);
+				JTextArea clauseFieldArea = new JTextArea(5, 20);				
+				JScrollPane clauseField = new JScrollPane(clauseFieldArea); 
+				
+				
+				JButton button = new JButton("Visualise");
 			    
-		JFrame frame = new JFrame("Prolog Visualiser");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		        PromptSupport.setPrompt("clause description here", metaClauseField);
+		        PromptSupport.setPrompt("clause here", clauseFieldArea);      
+		        
+		        PromptSupport.setFontStyle(Font.ITALIC, metaClauseField);
+		        PromptSupport.setFontStyle(Font.ITALIC, clauseFieldArea);
+		        
+				JPanel fieldPanel = new JPanel();
+				fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.PAGE_AXIS));
+				fieldPanel.add(metaClauseField);
+				fieldPanel.add(clauseField);
 		
-	    JPanel container = new JPanel();
-		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));		
-		container.setBackground(Color.WHITE);
-	    	   	
-//		JPanel infoPanel = new InfoPanel(container);
-//		infoPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, INFO_PANEL_HEIGHT));
-//		infoPanel.setBackground(Color.WHITE);
-	    
-		JTextField textField = new JTextField(1); 
+				
+			    JPanel formPanel = new JPanel(); 
+			    formPanel.setLayout(new BorderLayout());
+			    formPanel.setSize(new Dimension(LAYOUT_WIDTH, formPanel.getHeight()));
+			    formPanel.setBackground(Color.WHITE);	    
+			    formPanel.add(fieldPanel);
+			    formPanel.add(button, BorderLayout.EAST);
+			    formPanel.setBorder(BorderFactory.createEmptyBorder(SCREEN_MARGIN, SCREEN_MARGIN, 0, SCREEN_MARGIN));
+			    
+			    JPanel tempDrawingPanel = new JPanel();
+				tempDrawingPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+		//		tempDrawingPanel.setPreferredSize(new Dimension(500, 500));
+				tempDrawingPanel.setBackground(Color.WHITE);
+				
+				
+			    container.add(formPanel);	    
+		//		container.add(infoPanel);
+				container.add(tempDrawingPanel);
+			
+				frame.getContentPane().add(container);
+				
+				JButton plus = new JButton("+");
+				JButton minus = new JButton("-");
+				JButton reset = new JButton("reset");
+
+				JPanel controls = new JPanel();
+				controls.add(plus);
+				controls.add(minus);
+				controls.add(reset);
+				frame.add(controls, BorderLayout.SOUTH);
+				
+				frame.pack();
+				frame.setVisible(true); 
+				Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+				frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+				
+				frame.requestFocusInWindow();
+		//		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));
+		//		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 70));	
+		//		frame.setResizable(false);
 		
-		JButton button = new JButton("Visualise");
-	    
-	    JPanel inputPanel = new JPanel(); 
-	    inputPanel.setLayout(new BorderLayout());
-	    inputPanel.setSize(new Dimension(LAYOUT_WIDTH, inputPanel.getHeight()));
-	    inputPanel.setBackground(Color.WHITE);	    
-	    inputPanel.add(textField);
-	    inputPanel.add(button, BorderLayout.EAST);
-	    inputPanel.setBorder(BorderFactory.createEmptyBorder(SCREEN_MARGIN, SCREEN_MARGIN, 0, SCREEN_MARGIN));
-	    
-	    JPanel tempDrawingPanel = new JPanel();
-		tempDrawingPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
-//		tempDrawingPanel.setPreferredSize(new Dimension(500, 500));
-		tempDrawingPanel.setBackground(Color.WHITE);
+				System.out.println(LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 90);
+				
+				ActionListener actionListener = new ActionListener(){
+			    	public void actionPerformed(ActionEvent e){
+			    		
+			    		try{
+			    			
+			    			String metaClause = metaClauseField.getText().trim();
+			    			MetaPredicate pred = null;
+			    			
+			    			if(!metaClause.equals("")){
+			    				int openBracIndex = metaClause.indexOf("("), closeBracIndex = metaClause.indexOf(")");
+				    			String[] args = metaClause.substring(openBracIndex + 1, closeBracIndex).split(",");
+				    			int arity = args.length;
+				    			
+				    			pred = new MetaPredicate(metaClause.substring(0, openBracIndex), arity);
+				    			
+				    			for(int i = 0; i < args.length; i++){
+				    				pred.addRoleName(args[i].trim().toLowerCase());
+				    			}
+				    			
+				    			System.err.println(pred.getRoleName(0));	
+			    			}
+			    			
+			    			
+			    			
+				    		ParserProcess pp = new ParserProcess(pred);
+				    		List<Node> nodes = pp.traverse(clauseFieldArea.getText().trim());
+				    		System.out.println("done traversing");
+				    		
+				    		Stack<Node> mainBranch = findMainBranch(nodes);
+				    		
+				    		
+				    		frame.getContentPane().removeAll();
+				    		VisualizationViewer vv = (VisualizationViewer) GraphExtension.visualise(nodes, mainBranch);
+		//		    		JPanel tempPanel = new JPanel();
+				    		final GraphZoomScrollPane tempPanel = new GraphZoomScrollPane(vv);
+				    		tempPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
+				    		tempPanel.add(vv);
+				    		
+				    		final AbstractModalGraphMouse graphMouse = new DefaultModalGraphMouse<String,Number>();
+							vv.setGraphMouse(graphMouse);
 		
+							vv.addKeyListener(graphMouse.getModeKeyListener());
+							vv.setToolTipText("<html><center>Type 'p' for Pick mode<p>Type 't' for Transform mode");
+							
+							final ScalingControl scaler = new CrossoverScalingControl();
 		
-	    container.add(inputPanel);	    
-//		container.add(infoPanel);
-		container.add(tempDrawingPanel);
-	
-		frame.getContentPane().add(container);
-		frame.pack();
-		frame.setVisible(true); 
-		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
-//		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));
-//		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 70));	
-//		frame.setResizable(false);
-
-		System.out.println(LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 90);
+							JButton plus = new JButton("+");
+							plus.addActionListener(new ActionListener() {
+								public void actionPerformed(ActionEvent e) {
+									scaler.scale(vv, 1.2f, vv.getCenter());
+								}
+							});
+							JButton minus = new JButton("-");
+							minus.addActionListener(new ActionListener() {
+								public void actionPerformed(ActionEvent e) {
+									scaler.scale(vv, 1 / 1.2f, vv.getCenter());
+								}
+							});
 		
-		ActionListener actionListener = new ActionListener(){
-	    	public void actionPerformed(ActionEvent e){
-	    		
-	    		try{
-		    		ParserProcess pp = new ParserProcess();
-		    		List<Node> nodes = pp.traverse(textField.getText());
-		    		System.out.println("done traversing");
-		    		
-		    		frame.getContentPane().removeAll();
-		    		VisualizationViewer vv = (VisualizationViewer) visualise(nodes);
-//		    		JPanel tempPanel = new JPanel();
-		    		final GraphZoomScrollPane tempPanel = new GraphZoomScrollPane(vv);
-		    		tempPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
-		    		tempPanel.add(vv);
-		    		
-		    		final AbstractModalGraphMouse graphMouse = new DefaultModalGraphMouse<String,Number>();
-					vv.setGraphMouse(graphMouse);
-
-					vv.addKeyListener(graphMouse.getModeKeyListener());
-					vv.setToolTipText("<html><center>Type 'p' for Pick mode<p>Type 't' for Transform mode");
-					
-					final ScalingControl scaler = new CrossoverScalingControl();
-
-					JButton plus = new JButton("+");
-					plus.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-							scaler.scale(vv, 1.5f, vv.getCenter());
-						}
-					});
-					JButton minus = new JButton("-");
-					minus.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-							scaler.scale(vv, 1 / 1.5f, vv.getCenter());
-						}
-					});
-
-					JButton reset = new JButton("reset");
-					reset.addActionListener(new ActionListener() {
-
-						public void actionPerformed(ActionEvent e) {
-							vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT)
-									.setToIdentity();
-							vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.VIEW).setToIdentity();
-						}
-					});
-
-					JPanel controls = new JPanel();
-					controls.add(plus);
-					controls.add(minus);
-					controls.add(reset);
-					frame.add(controls, BorderLayout.SOUTH);
-		    		
-		    		container.removeAll();
-		    		container.add(inputPanel);
-//		    		container.add(infoPanel);
-		    		vv.setBackground(Color.WHITE);
-		    		tempPanel.setBackground(Color.white);
-		    		container.add(tempPanel);	
-		    		frame.getContentPane().add(container); 	
-		    		frame.pack();
-		    		frame.setVisible(true);
-//		    		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-//		    		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
-//		    		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));
-//		    		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));	
-//		    		frame.setResizable(false);
-		    		textField.requestFocus();
-	    		}catch(Exception ex){	    			
-	    			ex.printStackTrace();
-	    		}
-	    		
-//	    		container.add(visualise(pp.traverse("sift([X | Tail], N, Result):- X =< N, sift(Tail, N, Result).")));	
-	    	}
-	    };
-	    
-    	button.addActionListener(actionListener);	
-	    textField.addActionListener(actionListener);
-         
-         
+							JButton reset = new JButton("reset");
+							reset.addActionListener(new ActionListener() {
+		
+								public void actionPerformed(ActionEvent e) {
+									vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.LAYOUT)
+											.setToIdentity();
+									vv.getRenderContext().getMultiLayerTransformer().getTransformer(Layer.VIEW).setToIdentity();
+								}
+							});
+		
+							JPanel controls = new JPanel();
+							controls.add(plus);
+							controls.add(minus);
+							controls.add(reset);
+							frame.add(controls, BorderLayout.SOUTH);
+				    		
+				    		container.removeAll();
+				    		container.add(formPanel);
+		//		    		container.add(infoPanel);
+				    		vv.setBackground(Color.WHITE);
+				    		tempPanel.setBackground(Color.white);
+				    		container.add(tempPanel);	
+				    		frame.getContentPane().add(container); 	
+				    		frame.pack();
+				    		frame.setVisible(true);
+		//		    		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		//		    		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+		//		    		frame.setMinimumSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));
+		//		    		frame.setSize(new Dimension(LAYOUT_WIDTH + 20, LAYOUT_HEIGHT + INFO_PANEL_HEIGHT + 50));	
+		//		    		frame.setResizable(false);
+		//		    		clauseField.requestFocus();
+			    		}catch(Exception ex){	    			
+			    			ex.printStackTrace();
+			    		}
+			    		
+		//	    		container.add(visualise(pp.traverse("sift([X | Tail], N, Result):- X =< N, sift(Tail, N, Result).")));	
+			    	}
+			    };
+			    
+		    	button.addActionListener(actionListener);	
+//			    clauseField.addActionListener(actionListener);
+			    
+			}
+		});			    		
 	}
 	
 	class InfoPanel extends JPanel {
@@ -206,10 +251,10 @@ public class Visualiser implements ActionListener  {
             
             try{
             	System.out.println("hello");
-	            Image gray = ImageIO.read(new File("/colours/gray.png"));
-	            Image rect = ImageIO.read(new File("/colours/rectangle.png"));
-	            Image tri = ImageIO.read(new File("/colours/triangle.png"));
-	            Image green = ImageIO.read(new File("/colours/green.png"));
+	            Image gray = ImageIO.read(new File("/resources/gray.png"));
+	            Image rect = ImageIO.read(new File("/resources/rectangle.png"));
+	            Image tri = ImageIO.read(new File("/resources/triangle.png"));
+	            Image green = ImageIO.read(new File("/resources/green.png"));
 	            
 	            System.out.println("after pink");
 	            
@@ -226,471 +271,6 @@ public class Visualiser implements ActionListener  {
             }	            
         }
     }
-		
-		
-	public JPanel visualise(List<Node> predicateClauses){
-		SimpleGraphView sgv = new SimpleGraphView(predicateClauses); //We create our graph in here
-		// The Layout<V, E> is parameterized by the vertex and edge types
-//		Layout<Node, String> layout = new CircleLayout<>(sgv.graph);
-//		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
-//		FRLayout2<Node, String> layout = new FRLayout2<>(sgv.graph);
-		Layout<Node, Edge> layout = new ISOMLayout<>(sgv.graph);
-		layout.initialize();
-//		
-//		SpringLayout<Node, String> layout = new SpringLayout<>(sgv.graph);
-//		Layout<Node, String> layout = new KKLayout<>(sgv.graph);
-//		DAGLayout<Node, String> layout = new DAGLayout<>(sgv.graph);
-		
-		//-----FRLayout configuration------//
-//		layout.setRepulsionMultiplier(0.7);
-//		layout.setMaxIterations(10000000);
-//		layout.setRepulsionMultiplier(1);
-		//-----FRLayout configuration------//
-
-		
-		
-//		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets the initial size of the space
-		layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
-		// The BasicVisualizationServer<V,E> is parameterized by the edge types
-//		BasicVisualizationServer<Node,String> vv = new BasicVisualizationServer<Node,String>(layout);
-		VisualizationViewer<Node,Edge> vv = new VisualizationViewer<Node,Edge>(layout, new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
-//		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH - 500, LAYOUT_HEIGHT)); //Sets the viewing area size
-		vv.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
-//		vv.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT - 100)); //Sets the viewing area size
-	//	vv.setPreferredSize(new Dimension(600, 600)); //Sets the viewing area size
-	//	vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
-		 // Set up a new stroke Transformer for the edges
-		float dash[] = {10.0f};
-		final Stroke edgeStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
-		Transformer<String, Stroke> edgeStrokeTransformer = new Transformer<String, Stroke>() {
-			public Stroke transform(String s) {
-				return edgeStroke;
-			}
-		};
-		
-		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
-//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Orthogonal<Node, String>());
-//		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
-		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
-	
-//		vv.getRenderContext().setLabelOffset(-5);
-		
-		DefaultEdgeLabelRenderer edgeLabelRenderer = new DefaultEdgeLabelRenderer(Color.black){
-	        @Override
-	        public <E> Component getEdgeLabelRendererComponent(
-	            JComponent vv, Object value, Font font, 
-	            boolean isSelected, E edge) 
-	        {
-	            super.getEdgeLabelRendererComponent(
-	                vv, value, font, isSelected, edge);
-	            this.setForeground(Color.BLUE);	            
-	            
-	            VisualizationViewer vvv = ((VisualizationViewer)vv);
-	            Layout<Node, Edge> layout = vvv.getGraphLayout();
-	            Graph g = vvv.getGraphLayout().getGraph();
-	            Object[] ee = g.getEdges().toArray();
-//	            Edge e = (Edge) ee[0];
-	            
-	            Edge e = (Edge) edge;
-	            Node fromNode = e.fromNode;
-	            Node toNode = e.toNode;
-	            
-	            Point2D from = layout.transform(e.fromNode);
-	            Point2D to = layout.transform(e.toNode);
-	            
-	            System.err.println("------------------------------>" + from);
-	            
-	            double x1 = from.getX(), y1 = from.getY(), x2 = to.getX(), y2 = to.getY();
-	            double distance = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
-	            
-	            String fromLabel = e.fromLabel, toLabel = e.toLabel;
-	            
-	            if(fromLabel.contains("_")){
-	            	fromLabel = fromLabel.split("_")[0];
-	            }
-	            
-	            if(toLabel.contains("_")){
-	            	toLabel = toLabel.split("_")[0];
-	            }
-	            
-	            System.err.println("---" + fromLabel + " --- " + toLabel);
-	            
-	            double fromLabelSize = e.fromLabel.length() * 5.0, toLabelSize = e.toLabel.length() * 5.0; 
-	            
-	            int space = (int) ((distance - (fromLabelSize + toLabelSize)) / 5.0);
-	            
-	            String spaceFiller = "";
-	            
-	            if(distance <= 250){
-	            	space = (int)(space * 0.7);
-	            }else if(distance <= 350){
-	            	space = (int)(space * 0.8);
-	            }
-	            
-	            for(int i = 0; i < space; i++){
-	            	spaceFiller += "&nbsp;";
-	            }
-	            
-	            
-	            if(x1 <= x2){
-	            	
-	            	this.setText("<html><strong><font color='red'>" + fromLabel + "</font></strong>" + spaceFiller +
-	            			"<strong><font color='blue'>" + toLabel + "</font></strong></html>");
-	            }else{
-	            	this.setText("<html><strong><font color='blue'>" + toLabel + "</font></strong>" + spaceFiller + 
-	            			"<strong><font color='red'>" + fromLabel + "</font></strong></html>");
-	            }
-	            
-	            	           
-//	            g2.setTransform(orig);
-//	            if(e.fromNode.getNodeName().startsWith("N") || e.fromNode.getNodeName().startsWith("List")){
-//	            	System.err.println("-----------------");
-//	            	System.err.println(distance);
-//	            	System.err.println(e.fromNode.getNodeName());
-//		            System.err.println(from);
-//	            }
-//	            
-	            
-//	            if(n.isMainArg){
-//	            	this.setText(n.mainArgNo + ". " + this.getText());
-//	            }
-	            
-//	            if(n.getNodeType() == Node.TYPE.Functor){
-//	            	this.setText(this.getText() + "()");
-//	            }
-//	            
-//	            if(!n.isMainArg && n.getNodeType() == Node.TYPE.Variable){
-//	            	this.setText("<html><br>" + this.getText() + "</html>");
-//	            }
-	            
-//	            this.setText("ariel");
-	            
-	            
-	            
-//	            vv.getGraphics().setColor(Color.blue);
-//	            vv.getGraphics().fillRect(this.getX(), this.getY(), 10, 10);	           
-	            
-	            return this;
-	        }
-	        
-	    };
-	    
-		vv.getRenderContext().setEdgeLabelRenderer(edgeLabelRenderer);
-		
-//		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
-//            public String transform(Edge e) {
-////            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
-////            		return e.replaceAll("\\d","");            
-////            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
-////            		if(e.split("_")[1].startsWith("fromFunctor")){
-////            			return "";
-////            		}else{
-////            			return e.split("_")[0];
-////            		}
-////            	}else if(e.startsWith("clauseHeadListArg")){
-////            		return "";
-////            	}else{ //Just variables
-////            		return e;
-////            	}
-//            	if(e.toLabel.startsWith("Out_")){
-//            		return "Out_" + e.toLabel.split("_")[1];
-//            	}else if(!e.fromLabel.equals("")){
-//            		return e.fromLabel;
-//            	}else{
-////            		return e.toLabel.split("_")[0];
-//            		return e.toLabel;
-//            	}
-//            }
-//        });
-					
-		vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, Edge>, Edge>, Number>() {
-			@Override
-			public Number transform(Context<Graph<Node, Edge>, Edge> arg0) {          
-                return 0.5; //halfway on an edge.
-			}
-        });
-		
-		
-		
-		 
-		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, Edge>(5, 5, 0));
-		
-	    DefaultVertexLabelRenderer vertexLabelRenderer = new DefaultVertexLabelRenderer(Color.black){
-	        @Override
-	        public <V> Component getVertexLabelRendererComponent(
-	            JComponent vv, Object value, Font font, 
-	            boolean isSelected, V vertex) 
-	        {
-	            super.getVertexLabelRendererComponent(
-	                vv, value, font, isSelected, vertex);
-	            setForeground(Color.black);
-	            
-	            Node n = (Node) vertex;
-//	            if(n.isMainArg){
-//	            	this.setText(n.mainArgNo + ". " + this.getText());
-//	            }
-	            
-//	            if(n.getNodeType() == Node.TYPE.Functor){
-//	            	this.setText(this.getText() + "()");
-//	            }
-//	            
-	            if(!n.isMainArg && n.getNodeType() == Node.TYPE.Variable){
-	            	this.setText("<html><br>" + this.getText() + "</html>");
-	            }
-	            
-//	            vv.getGraphics().setColor(Color.blue);
-//	            vv.getGraphics().fillRect(this.getX(), this.getY(), 10, 10);	           
-	            
-	            return this;
-	        }
-	        
-	    };
-	    
-	 // Transformer maps the vertex number to a vertex property
-	    Transformer<Node,Paint> vertexColor = new Transformer<Node, Paint>() {
-	        public Paint transform(Node node){
-//	        	return node.getNodeColor();
-	        	return Color.white;
-	        }
-	    };
-	    
-	    Transformer<Node,Shape> vertexShape = new Transformer<Node, Shape>(){
-	        public Shape transform(Node i){
-	        	System.out.println(i.getClass().getTypeName());
-	        	Shape shape = null;
-	        	String nodeType = i.getClass().getTypeName();   
-	        	
-	        	
-	        	if(i.isMainArg){
-	        		int radius = 30;
-	        		shape = new Ellipse2D.Double(-15, -15, radius, radius);
-	        	}else if(nodeType.equals("Visual.ListOperatorNode")){
-	        		shape = new Rectangle(-15, -15, 22, 22);
-	        	}else if(nodeType.equals("Visual.FunctorNode")){
-	//        		shape = new Rectangle(-15, -15, 20, 20);
-	        		int width = (i.getNodeName().length() < 5) ? 5 : i.getNodeName().length(); // so the node doesn't look too small.        		
-	        		width = width > 10 ? 10 : width; //enforce max rectangle width.
-	        		
-	        		width = (int)(width * 4.5);
-	        		width += nodeType.equals("Visual.FunctorNode") ? 3 : 0; //for the extra "()" 
-	        		width += i.isMainArg ? 3: 0; //for the extra arg number at the start.
-	        		
-	        		if(FunctorNode.isListPredicate(i.getNodeName())){
-	        			shape = new Rectangle(-15, -15, width, 25);
-	        		}else{
-	        			shape = new Rectangle(-15, -15, width, 20);
-	        		}
-	        		
-	        	}else if(nodeType.equals("Visual.OperatorNode")){
-	        		shape = new Rectangle(-15, -15, 20, 20);
-	        	}else if(nodeType.equals("Visual.VariableNode")){
-	        		if(i.nodesFrom.size() + i.nodesTo.size() >= 3){ // This VariableNode now becomes a Junction.
-	        			shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);	   	        			
-	        		}else{
-						final GeneralPath p0 = new GeneralPath();
-						int sizeFactor = 10;
-						p0.moveTo(0.0f, -sizeFactor); //start at point 1
-						p0.lineTo(sizeFactor*2, sizeFactor); //go to point 2
-						p0.lineTo(-sizeFactor*2, sizeFactor); //go to point 3
-						p0.closePath();
-		        		shape = p0;
-	        		}
-	        	}else{
-	        		shape = new Ellipse2D.Double(-15, -15, 20, 20);
-	        	}
-	        	
-	            // in this case, the vertex is twice as large
-	            return AffineTransform.getScaleInstance(2, 2).createTransformedShape(shape);
-	            
-	        }
-	    };
-	    
-	    Transformer<Node, Icon> vertexIcon = new Transformer<Node, Icon>(){
-
-			@Override
-			public Icon transform(Node node) {
-				// TODO Auto-generated method stub
-				try{
-					if(node.isMainArg){
-	//					return new ImageIcon("./colours/argumentArrows.svg");
-	//					JSVGCanvas svg = new JSVGCanvas();
-	//			        svg.setURI("file:./colours/argumentArrows.svg");
-						
-						File file = new File("colours/5.svg");
-						System.err.println(file.getAbsolutePath());
-						URL url = Visualiser.class.getResource("/colours/5.svg");
-//						URL url = new URL("file:" + file.getAbsolutePath());
-						SvgImage svgimage = new SvgImage(url);
-//				        SvgImage svgimage = new SvgImage(new URL("file:/colours/5.svg"));
-//	//					return new ImageIcon("./colours/green.png");
-				        return new ImageIcon(svgimage.getImage(45, 45));
-				        
-
-						
-					}else if(node.getNodeType() == Node.TYPE.ListOperator){
-//						SvgImage svgimage = new SvgImage(new URL("file:./colours/listProcessor.svg"));
-//						return new ImageIcon(svgimage.getImage(45, 45));
-						URL url = Visualiser.class.getResource("/colours/listProcessor.png");
-						ImageIcon icon = new ImageIcon(url);
-						System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
-//						return icon;
-						return new Icon() {
-			                public int getIconHeight() {
-			                    return 45;
-			                }
-
-			                public int getIconWidth() {
-			                    return 45;
-			                }
-			                
-			                int offset = 6;
-			                public void paintIcon(Component c, Graphics g, int x, int y) {
-			                    g.drawImage(icon.getImage(), x - offset, y - offset - 3, getIconWidth(), getIconHeight(), null);
-			                }
-			            };
-					}else if(node.getNodeType() == Node.TYPE.Functor){
-						String functor = node.getNodeName();
-						
-						if(FunctorNode.isListPredicate(functor)){
-//							ImageIcon icon = new ImageIcon("./colours/not_member.png");
-							ImageIcon icon = new ImageIcon(FunctorNode.getIconPath(functor));
-							System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
-//							return icon;
-							return new Icon() {
-				                public int getIconHeight() {
-//				                    return 204;
-				                	return 51;
-				                }
-
-				                public int getIconWidth() {
-//				                    return 244;
-				                	return 61;
-				                }
-				                
-				                int offset = 6;
-				                public void paintIcon(Component c, Graphics g, int x, int y) {
-				                    g.drawImage(icon.getImage(), x , y - offset, getIconWidth(), getIconHeight(), null);
-				                }
-				            };
-						}
-						
-					}
-					
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-				
-				return null;
-			}
-	    	
-	    };
-
-	    Transformer<Node, String> vertexLabelTransformer = new Transformer<Node, String>(){
-
-			@Override
-			public String transform(Node node) {
-				// TODO Auto-generated method stub
-				Node.TYPE type = node.getNodeType();
-				if(type == Node.TYPE.ListOperator || (FunctorNode.isListPredicate(node.getNodeName()))){
-					return null;
-				}else{
-					return node.getNodeName();
-				}
-			}
-	    	
-	    };
-	    
-	    vv.getRenderContext().setVertexFillPaintTransformer(vertexColor);
-	    vv.getRenderContext().setVertexShapeTransformer(vertexShape);    
-	    vv.getRenderContext().setVertexLabelRenderer(vertexLabelRenderer);
-//	    vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller<>());
-	    vv.getRenderContext().setVertexLabelTransformer(vertexLabelTransformer);
-	    vv.getRenderContext().setVertexIconTransformer(vertexIcon);
-	    
-
-        vv.getRenderer().setVertexRenderer(new MultiVertexRenderer<>());
-        
-	    vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
-	   
-	    
-	    
-//	    vv.getRenderContext().
-	    
-//	    vv.addPreRenderPaintable(new VisualizationViewer.Paintable(){
-//	        public void paint(Graphics g) {
-//	//        	BufferedImage img = null;
-//	//            try {
-//	//                img = ImageIO.read(new File("circle.png"));
-//	//            } catch (IOException e) {
-//	//            }
-//	//            Dimension d = vv.getSize();
-//	//            if(img!=null){
-//	//            	g.drawImage(img,0,0,d.width,d.height,vv);
-//	//            }
-//	            
-//	//            g.drawRect(30, 30, 10, 10);
-//	//            vv.image
-//	            g.drawString("hellohellohellohellohellohellohellohello", 30, 20);
-//	            vv.fireStateChanged();
-//	            int x = 20;
-//	            int y = 20;
-//	            Font font = null;
-//	            FontMetrics metrics;
-//	            int swidth;
-//	            int sheight;
-//	            String str = "GraphZoomScrollPane Demo";
-//	            
-//	            
-//	                Dimension d = vv.getSize();
-//	                if(font == null) {
-//	                    font = new Font(g.getFont().getName(), Font.BOLD, 30);
-//	                    metrics = g.getFontMetrics(font);
-//	                    swidth = metrics.stringWidth(str);
-//	                    sheight = metrics.getMaxAscent()+metrics.getMaxDescent();
-//	                    x = (d.width-swidth)/2;
-//	                    y = (int)(d.height-sheight*1.5);
-//	                }
-//	                g.setFont(font);
-//	                Color oldColor = g.getColor();
-//	                g.setColor(Color.BLUE);
-//	//                g.drawString(str, x, y);
-//	//                g.setColor(oldColor);
-//	                font = new Font(g.getFont().getName(), Font.BOLD, 15);
-//	                g.setFont(font);
-//	                
-//	//                g.drawRect(10, 0, 580, 600-20-25);
-//	            
-//	        }
-//	        public boolean useTransform() { return false; }
-//	    });
-//	
-//	    
-	    
-//	    vv.addGraphMouseListener(new GraphMouseListener<Node>() {
-//			
-//			@Override
-//			public void graphReleased(Node arg0, MouseEvent arg1) {
-//				// TODO Auto-generated method stub
-//				
-//			}
-//			
-//			@Override
-//			public void graphPressed(Node arg0, MouseEvent arg1) {
-//				// TODO Auto-generated method stub
-//				System.out.println("pressed");System.out.println(arg0);
-//				
-//			}
-//			
-//			@Override
-//			public void graphClicked(Node arg0, MouseEvent arg1) {
-//				// TODO Auto-generated method stub
-//				
-//			}
-//		});
-	    
-		return vv;
-	}
-
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
@@ -698,16 +278,94 @@ public class Visualiser implements ActionListener  {
 		
 	}
 	
-	static class MyRenderer implements Renderer.EdgeLabel<Node, Edge>{
+	private Stack<Node> path  = new Stack<Node>();   // the current path
+    private Set<Node> onPath  = new HashSet<Node>();     // the set of vertices on the path
+    private Set<Stack<Node>> paths = new HashSet<>();
 
-		@Override
-		public void labelEdge(RenderContext<Node, Edge> context, Layout<Node, Edge> layout, Edge edge, String label) {
-			// TODO Auto-generated method stub
-			System.out.println("label ---> " + label);
-			System.out.println(edge);
+    // use DFS
+    private void enumerate(Graph G, Node v, Node t) {
+
+        // add node v to current path from s
+        path.push(v);
+        onPath.add(v);
+
+        // found path from s to t - currently prints in reverse order because of stack
+        if (v.equals(t)) {
+            System.out.println(path);
+        	Stack<Node> clone = new Stack<>();
+            for (Node item : path){
+            	clone.push(item);
+            }
+            
+        	paths.add(clone);
+        // consider all neighbors that would continue path with repeating a node
+        }else {
+        	
+            for (Node w : (Collection<Node>)G.getNeighbors(v)){
+                if (!onPath.contains(w)) enumerate(G, w, t);
+            }
+        }
+
+        // done exploring from v, so remove from path
+        path.pop();
+        onPath.remove(v);
+    }
+		
+	public Stack<Node> findMainBranch(List<Node> nodes){
+		SimpleGraphView gv = new SimpleGraphView(nodes);
+		Set<Node> inputNodes = new HashSet<>();
+		Node outputNode = null;
+		
+		for(Node n : gv.graph.getVertices()){
+			if(n.isMainArg){
+				if(n.nodesTo.isEmpty()){
+					outputNode = n;
+				}else{
+					inputNodes.add(n);
+				}
+			}						
+		}
+					
+		for(Node inputNode : inputNodes){
+			enumerate(gv.graph, inputNode, outputNode);
+		}
+		
+		System.err.println("_____________________________________________________________________________________");
+		int maxListVarCount = -1, minNodeCount = Integer.MAX_VALUE;
+		Stack<Node> mainBranch = null;
+		for(Stack<Node> path : paths){
+			System.err.println(path);
 			
+			int listVarCount = 0, nodeCount = 0;
+			
+			Iterator<Node> iter = path.iterator();
+			while (iter.hasNext()){
+				Node n = iter.next();
+			    if(n.getNodeType() == Node.TYPE.ListOperator || (n.isMainArg && n.getNodeName().contains("List"))){
+			    	listVarCount++;
+			    }
+			    nodeCount++;
+			}
+			
+			System.err.println("nodeCount is " + nodeCount);
+			
+			if(path != null && nodeCount != 0){
+				if(listVarCount > maxListVarCount || (listVarCount == maxListVarCount && nodeCount < minNodeCount)){
+					mainBranch = path;
+					maxListVarCount = listVarCount;				
+					minNodeCount = nodeCount;					
+					
+				}
+			}
 			
 		}
+		
+		System.err.println("mainBranch is");
+		System.err.println(mainBranch);
+		
+		this.paths.clear();
+		
+		return mainBranch;
 		
 	}
 

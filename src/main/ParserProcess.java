@@ -1,4 +1,5 @@
 package main;
+
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -13,12 +14,13 @@ import com.igormaznitsa.prologparser.terms.PrologList;
 import com.igormaznitsa.prologparser.terms.PrologStructure;
 import com.igormaznitsa.prologparser.terms.PrologTermType;
 
+import Visual.ArithmeticOperatorNode;
+import Visual.AtomNode;
 import Visual.Edge;
 import Visual.FunctorNode;
 import Visual.ListOperatorNode;
 import Visual.MainArgumentNode;
 import Visual.Node;
-import Visual.OperatorNode;
 import Visual.VariableNode;
 
 public class ParserProcess {
@@ -26,11 +28,14 @@ public class ParserProcess {
 	private List<Node> nodes = new ArrayList<>();
 	private List<List<Node>> predicateClauses = new ArrayList<List<Node>>();
 
+	private MetaPredicate pred; 
+	
 	private int listArgumentCount = 1;
 	private int listOperatorNodeCount = 1;
 	private int mainArgCount = 1;
 	private boolean isOuterMostClause = true;
-
+	
+	
 	
 	//----------------------------------Variables used for regressionTestBuiltNodeCount()----------------------------------
 //	public int[] prologProgramFileClauseNodeCount = new int[] { 5, 17, 8, 6, 6, 6, 9, 9, 9, 10, 10 };
@@ -46,7 +51,8 @@ public class ParserProcess {
 	//END-------------------------------Variables used for regressionTestBuiltNodeCount()-------------------------------END
 	
 
-	public ParserProcess() {
+	public ParserProcess(MetaPredicate pred) {
+		this.pred = pred;
 //		run();
 //		regressionTestBuiltNodeCount();
 	}
@@ -97,7 +103,7 @@ public class ParserProcess {
 			
 			
 			Visualiser vis = new Visualiser();
-			vis.visualise(this.predicateClauses.get(0));
+//			vis.visualise(this.predicateClauses.get(0));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -138,13 +144,16 @@ public class ParserProcess {
 				Edge toNodeEdge = to.getFromNodeEdge(node);
 				Edge newEdge = null;
 				
-				if(from.getNodeType() == Node.TYPE.ListOperator || to.getNodeType() == Node.TYPE.Operator){
+				if(to.getNodeType() == Node.TYPE.Operator){
 					System.err.println("-->" + node.getNodeName());
 					newEdge = new Edge(toNodeEdge.toLabel, from, to, true);
-					newEdge.fromLabel = node.getNodeName();
+					newEdge.fromLabel = fromNodeEdge.fromLabel;
+					
+//					newEdge.fromLabel = node.getNodeName();
 					
 				}else{
 					newEdge = new Edge(toNodeEdge.toLabel, from, to, true);
+					newEdge.fromLabel = fromNodeEdge.fromLabel;
 				}
 				
 				
@@ -163,7 +172,7 @@ public class ParserProcess {
 		
 		nodesToRemove = new ArrayList<>();
 		
-		// Removing variables shared by 
+		// Removing variables referred to by two other nodes.
 		for(int i = 0; i < list.size(); i++){
 			Node node = list.get(i);
 			
@@ -174,9 +183,14 @@ public class ParserProcess {
 				Edge edge1 = n1.getToNodeEdge(node);
 				Edge edge2 = n2.getToNodeEdge(node);
 				
-				n1.nodesTo.set(n1.nodesTo.indexOf(edge1), new Edge(node.getNodeName(), n1, n2, false));
+				Edge newEdge = new Edge(node.getNodeName(), n1, n2, false);
+				newEdge.centerLabel = node.getNodeName();
+				newEdge.fromLabel = "";
+				newEdge.toLabel = "";
+				
+				n1.nodesTo.set(n1.nodesTo.indexOf(edge1), newEdge);
 				n2.nodesTo.remove(edge2);
-				n2.nodesFrom.add(new Edge(node.getNodeName(), n1, n2, false));
+				n2.nodesFrom.add(newEdge);
 				
 				nodesToRemove.add(node);
 			}		
@@ -392,14 +406,19 @@ public class ParserProcess {
 								}else{
 //									fNode.addFromNode("arg" + (index+1), n);
 //									n.addToNode("arg" + (index+1), fNode);
-									String edgeLabel = n.getNodeName();
+									String edgeLabel = "";
 									
-									if(edgeLabel.startsWith("Out_")){
-										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
-									}
+//									if(edgeLabel.startsWith("Out_")){
+//										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
+//									}
 									
 									fNode.addFromNode(edgeLabel + "_" + (index+1), n);
 									n.addToNode(edgeLabel + "_" + (index+1), fNode);
+									
+									if(pred != null){
+										fNode.getFromNodeEdge(n).toLabel = this.pred.getRoleName(index);
+									}
+									
 								}
 								
 							}else{
@@ -408,16 +427,26 @@ public class ParserProcess {
 									String label = index == 0 ? "element_" : "set_";
 									n.addFromNode(label + (index+1), fNode);
 									fNode.addToNode(label + (index+1), n);
+								
 								}else{
 //									n.addFromNode("arg" + (index+1), fNode);
 //									fNode.addToNode("arg" + (index+1), n);
-									String edgeLabel = n.getNodeName();
+									String edgeLabel = "";
 									
-									if(edgeLabel.startsWith("Out_")){
-										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
-									}
+//									if(edgeLabel.startsWith("Out_")){
+//										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
+//									}
+									
+//									n.addFromNode(edgeLabel + "_" + (index+1), fNode);
+									
 									n.addFromNode(edgeLabel + "_" + (index+1), fNode);
 									fNode.addToNode(edgeLabel + "_" + (index+1), n);
+									
+									if(pred != null){
+										String label = this.pred.getRoleName(index); 
+										n.getFromNodeEdge(fNode).fromLabel = label;
+									}
+									
 								}
 							}
 						}
@@ -444,7 +473,7 @@ public class ParserProcess {
 		} else if (term.getType() == PrologTermType.ATOM) { // Example: NY is Y + 1. 1 is an ATOM. Y is a VAR.
 			System.out.println("---ATOM TERM---");
 			System.out.println(term);
-			return retrieveNode(term.getText(), Node.TYPE.Variable, false);
+			return retrieveNode(term.getText(), Node.TYPE.Atom, true);
 
 		} else if (term.getType() == PrologTermType.VAR) {
 			System.out.println("---VAR TERM---");
@@ -539,7 +568,9 @@ public class ParserProcess {
 		Node n;
 		if (type == Node.TYPE.Variable) {
 			n = new VariableNode(nodeName);
-		} else if (type == Node.TYPE.Functor) {
+		} else if (type == Node.TYPE.Atom) {
+			n = new AtomNode(nodeName);
+		}else if (type == Node.TYPE.Functor) {
 			n = new FunctorNode(nodeName);
 		} else if (type == Node.TYPE.ListOperator) {
 			n = new ListOperatorNode("List" + this.listArgumentCount);
@@ -548,7 +579,7 @@ public class ParserProcess {
 			n = new MainArgumentNode(nodeName + this.mainArgCount);
 			this.mainArgCount++;
 		} else if (type == Node.TYPE.Operator) {
-			n = new OperatorNode(nodeName);
+			n = new ArithmeticOperatorNode(nodeName);
 		} else {
 			System.out.println(type);
 			throw new Exception("can't go here in retrieveNode");

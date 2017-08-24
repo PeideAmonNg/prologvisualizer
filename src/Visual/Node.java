@@ -13,11 +13,9 @@ public abstract class Node {
 	public List<Edge> nodesTo = new ArrayList<>();
 	public List<Edge> nodesFrom = new ArrayList<>();
 	
-	public enum TYPE {Functor, ListOperator, MainArgument, Operator, Variable};
+	public enum TYPE {Functor, ListOperator, MainArgument, Operator, Variable, Atom};
 	public boolean isMainArg;
 	public int mainArgNo;
-	
-	
 	
 	public Node(String node){
 		this.node = node;
@@ -45,7 +43,7 @@ public abstract class Node {
 		System.err.println(this.getNodeName());
 		System.err.println(this.getNodeType());
 		if(this.getNodeType() == Node.TYPE.ListOperator){
-			Edge e = new Edge(edgeLabel, this, node, true);
+			Edge e = new Edge("", this, node, true);
 			e.fromLabel = edgeLabel;
 			this.nodesTo.add(e);
 			
@@ -60,7 +58,7 @@ public abstract class Node {
 		System.err.println(edgeLabel);
 		System.err.println(node.getNodeName());
 		if(node.getNodeType() == Node.TYPE.ListOperator){
-			Edge e = new Edge(edgeLabel, node, this, true);
+			Edge e = new Edge("", node, this, true);
 			e.fromLabel = edgeLabel;
 			this.nodesFrom.add(e);
 			

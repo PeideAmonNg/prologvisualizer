@@ -8,11 +8,11 @@ import main.Visualiser;
 public class FunctorNode extends Node {
 
 	//Icons for list predicates.
-	public static final String CONCAT = "/colours/not_member.png";
-	public static final String APPEND = "/colours/not_member.png";
-	public static final String LENGTH = "/colours/member.png";
-	public static final String MEMBER = "/colours/member.png";
-	public static final String NOT_MEMBER = "/colours/not_member.png";
+	public static final String CONCAT = "/resources/not_member.png";
+	public static final String APPEND = "/resources/not_member.png";
+	public static final String LENGTH = "/resources/member.png";
+	public static final String MEMBER = "/resources/member.png";
+	public static final String NOT_MEMBER = "/resources/not_member.png";
 	
 	
 	public FunctorNode(String node) {
@@ -31,7 +31,6 @@ public class FunctorNode extends Node {
 
 	@Override
 	public Color getNodeColor() {
-		// TODO Auto-generated method stub
 		if(super.isMainArg){
 			return Color.LIGHT_GRAY;
 		}
