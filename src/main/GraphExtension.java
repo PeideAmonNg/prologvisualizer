@@ -29,6 +29,7 @@ import Visual.Edge;
 import Visual.FunctorNode;
 import Visual.Node;
 import Visual.SimpleGraphView;
+import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
@@ -50,9 +51,14 @@ public class GraphExtension {
 //		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
 //		FRLayout2<Node, String> layout = new FRLayout2<>(sgv.graph);
 //		Layout<Node, Edge> layout = new ISOMLayout<>(sgv.graph);
-		Layout<Node, Edge> layout = new CustomLayout(sgv.graph, mainBranch);
+		ISOMLayout<Node, Edge> layout = new CustomLayout(sgv.graph, mainBranch);
+//		ExtendedISOMLayout<Node, Edge> layout = new ExtendedISOMLayout(sgv.graph, mainBranch);
 //		SpringLayout<Node, Edge> layout = new SpringLayout<>(sgv.graph);
 //		layout.initialize();
+		
+		
+
+		
 		
 //		
 //		Layout<Node, String> layout = new KKLayout<>(sgv.graph);
@@ -87,7 +93,7 @@ public class GraphExtension {
 		
 		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
 //		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.CubicCurve<Node, Edge>());
-//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Orthogonal<Node, String>());
+//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<Node, Edge>());		
 //		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
 		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
 	
@@ -116,7 +122,7 @@ public class GraphExtension {
 	            Point2D from = layout.transform(fromNode);
 	            Point2D to = layout.transform(toNode);
 	            
-	            System.err.println("------------------------------>" + from);
+	            // System.err.println("------------------------------>" + from);
 	            
 	            double x1 = from.getX(), y1 = from.getY(), x2 = to.getX(), y2 = to.getY();
 	            double distance = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
@@ -132,7 +138,7 @@ public class GraphExtension {
 	            	toLabel = toLabel.split("_")[0];
 	            }
 	            
-	            System.err.println("---" + fromLabel + " --- " + toLabel);
+	            // System.err.println("---" + fromLabel + " --- " + toLabel);
 	            
 	            double fromLabelSize = e.fromLabel.length() * 5.0, toLabelSize = e.toLabel.length() * 5.0, centerLabelSize = e.centerLabel.length() * 5.0; 
 	            
@@ -247,10 +253,10 @@ public class GraphExtension {
 	            	           
 //	            g2.setTransform(orig);
 //	            if(e.fromNode.getNodeName().startsWith("N") || e.fromNode.getNodeName().startsWith("List")){
-//	            	System.err.println("-----------------");
-//	            	System.err.println(distance);
-//	            	System.err.println(e.fromNode.getNodeName());
-//		            System.err.println(from);
+//	            	// System.err.println("-----------------");
+//	            	// System.err.println(distance);
+//	            	// System.err.println(e.fromNode.getNodeName());
+//		            // System.err.println(from);
 //	            }
 //	            
 	            
@@ -337,7 +343,7 @@ public class GraphExtension {
 //	            	this.setText(this.getText() + "()");
 //	            }
 //	            
-	            if(!n.isMainArg && n.getNodeType() == Node.TYPE.Variable){
+	            if(!n.isMainArg && n.getType() == Node.TYPE.Variable){
 	            	this.setText("<html><br>" + this.getText() + "</html>");
 	            }
 	            
@@ -359,9 +365,9 @@ public class GraphExtension {
 	    
 	    Transformer<Node,Shape> vertexShape = new Transformer<Node, Shape>(){
 	        public Shape transform(Node i){
-	        	System.out.println(i.getNodeType());
+	        	// System.out.println(i.getType());
 	        	Shape shape = null;
-	        	Node.TYPE nodeType = i.getNodeType();   
+	        	Node.TYPE nodeType = i.getType();   
 	        	
 	        	
 	        	if(i.isMainArg){
@@ -371,14 +377,14 @@ public class GraphExtension {
 	        		shape = new Rectangle(-15, -15, 22, 22);
 	        	}else if(nodeType == Node.TYPE.Functor){
 	//        		shape = new Rectangle(-15, -15, 20, 20);
-	        		int width = (i.getNodeName().length() < 5) ? 5 : i.getNodeName().length(); // so the node doesn't look too small.        		
+	        		int width = (i.getName().length() < 5) ? 5 : i.getName().length(); // so the node doesn't look too small.        		
 	        		width = width > 10 ? 10 : width; //enforce max rectangle width.
 	        		
 	        		width = (int)(width * 4.5);
 	        		width += 3; //for the extra "()" 
 	        		width += i.isMainArg ? 3: 0; //for the extra arg number at the start.
 	        		
-	        		if(FunctorNode.isListPredicate(i.getNodeName())){
+	        		if(FunctorNode.isListPredicate(i.getName())){
 	        			shape = new Rectangle(-15, -15, width, 25);
 	        		}else{
 	        			shape = new Rectangle(-15, -15, width, 20);
@@ -387,7 +393,7 @@ public class GraphExtension {
 	        	}else if(nodeType == Node.TYPE.Operator){
 	        		shape = new Rectangle(-15, -15, 20, 20);
 	        	}else if(nodeType == Node.TYPE.Variable){
-	        		if(i.nodesFrom.size() + i.nodesTo.size() >= 3){ // A variable in a Junction.
+	        		if(i.getFromNodeCount() + i.getToNodeCount() >= 3){ // A variable in a Junction.
 	        			shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);	   	        			
 	        		}
 	        	}else if(nodeType == Node.TYPE.Atom){ // A variable not in a Junction i.e. a triangle.
@@ -419,7 +425,7 @@ public class GraphExtension {
 						SvgImage svgimage = new SvgImage(url);
 				        return new ImageIcon(svgimage.getImage(45, 45));
 				        
-					}else if(node.getNodeType() == Node.TYPE.ListOperator){
+					}else if(node.getType() == Node.TYPE.ListOperator){
 						URL url = Visualiser.class.getResource("/resources/listProcessor.png");
 						ImageIcon icon = new ImageIcon(url);
 						
@@ -441,13 +447,13 @@ public class GraphExtension {
 			                }
 			            };
 			            
-					}else if(node.getNodeType() == Node.TYPE.Functor){
-						String functor = node.getNodeName();
+					}else if(node.getType() == Node.TYPE.Functor){
+						String functor = node.getName();
 						
 						if(FunctorNode.isListPredicate(functor)){
 //							ImageIcon icon = new ImageIcon("./resources/not_member.png");
 							ImageIcon icon = new ImageIcon(FunctorNode.getIconPath(functor));
-							System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
+							// System.err.println(icon.getIconWidth() + " " + icon.getIconHeight());
 //							return icon;
 							return new Icon() {
 				                public int getIconHeight() {
@@ -483,11 +489,11 @@ public class GraphExtension {
 			@Override
 			public String transform(Node node) {
 				// TODO Auto-generated method stub
-				Node.TYPE type = node.getNodeType();
-				if(type == Node.TYPE.ListOperator || (FunctorNode.isListPredicate(node.getNodeName()))){
+				Node.TYPE type = node.getType();
+				if(type == Node.TYPE.ListOperator || (FunctorNode.isListPredicate(node.getName()))){
 					return null;
 				}else{
-					return node.getNodeName();
+					return node.getName();
 				}
 			}
 	    	
@@ -510,8 +516,8 @@ public class GraphExtension {
 		@Override
 		public void labelEdge(RenderContext<Node, Edge> context, Layout<Node, Edge> layout, Edge edge, String label) {
 			// TODO Auto-generated method stub
-			System.out.println("label ---> " + label);
-			System.out.println(edge);
+			// System.out.println("label ---> " + label);
+			// System.out.println(edge);
 			
 			
 		}

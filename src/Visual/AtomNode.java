@@ -15,7 +15,7 @@ public class AtomNode extends Node{
 	}
 
 	@Override
-	public TYPE getNodeType() {
+	public TYPE getType() {
 		// TODO Auto-generated method stub
 		return Node.TYPE.Atom;
 	}

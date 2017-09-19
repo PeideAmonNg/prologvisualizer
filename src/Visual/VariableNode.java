@@ -16,7 +16,7 @@ public class VariableNode extends Node {
 
 	}
 
-	public TYPE getNodeType(){
+	public TYPE getType(){
 		return TYPE.Variable;
 	}
 

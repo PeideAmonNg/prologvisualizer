@@ -78,25 +78,24 @@ public class ParserProcess {
 				predicateClauses.add(this.nodes);
 				initializeFields();
 				sentence = parser.nextSentence(source);
-				System.out.println("----------------------------------------------------------------------------");
 			}
 
 
 
-			System.out.println("-----------------------------The End----------------------------------");
+			// System.out.println("-----------------------------The End----------------------------------");
 	
 			
 			for (List<Node> nodeList : predicateClauses) {
 				for (Node n : nodeList) {
-					System.out.print(n.getNodeName() + "\t");
+					// System.out.print(n.getName() + "\t");
 				}
-				System.out.println();
+				// System.out.println();
 				for (Node n : nodeList) {
-					System.out.print(n.getClass().toString() + "->" + n.getNodeName() + "\t");
+					// System.out.print(n.getClass().toString() + "->" + n.getName() + "\t");
 				}
-				System.out.println();
-				System.out.println(nodeList.size());
-				System.out.println("------------------------------------------------------------------------------");
+				// System.out.println();
+				// System.out.println(nodeList.size());
+				// System.out.println("------------------------------------------------------------------------------");
 			}
 
 			
@@ -127,8 +126,8 @@ public class ParserProcess {
 	
 	private void trimPaths() throws Exception{
 		List<Node> list = predicateClauses.get(0);
-		System.out.println("in trim path");
-		System.out.println(list.size());
+		// System.out.println("in trim path");
+		// System.out.println(list.size());
 		
 		List<Node> nodesToRemove = new ArrayList<>();
 		
@@ -136,31 +135,31 @@ public class ParserProcess {
 		for(int i = 0; i < list.size(); i++){
 			Node node = list.get(i);
 			
-			if(node.getNodeType() == Node.TYPE.Variable && !node.isMainArg && node.nodesFrom.size() == 1 && node.nodesTo.size() == 1){
-				System.err.println("-------------->  " + node.getNodeName());
-				Node from = node.nodesFrom.get(0).fromNode;
-				Node to = node.nodesTo.get(0).toNode;
+			if(node.getType() == Node.TYPE.Variable && !node.isMainArg && node.getFromNodeCount() == 1 && node.getToNodeCount() == 1){
+				// System.err.println("-------------->  " + node.getName());
+				Node from = node.getFromNodes().get(0);
+				Node to = node.getToNodes().get(0);
 				Edge fromNodeEdge = from.getToNodeEdge(node);
 				Edge toNodeEdge = to.getFromNodeEdge(node);
 				Edge newEdge = null;
 				
-				if(to.getNodeType() == Node.TYPE.Operator){
-					System.err.println("-->" + node.getNodeName());
-					newEdge = new Edge(toNodeEdge.toLabel, from, to, true);
+				if(to.getType() == Node.TYPE.Operator){
+					// System.err.println("-->" + node.getName());
+					newEdge = new Edge("", "", toNodeEdge.toLabel, from, to, true);
 					newEdge.fromLabel = fromNodeEdge.fromLabel;
 					
 //					newEdge.fromLabel = node.getNodeName();
 					
 				}else{
-					newEdge = new Edge(toNodeEdge.toLabel, from, to, true);
+					newEdge = new Edge("", "", toNodeEdge.toLabel, from, to, true);
 					newEdge.fromLabel = fromNodeEdge.fromLabel;
 				}
 				
 				
 				
-				from.nodesTo.set(from.nodesTo.indexOf(fromNodeEdge), newEdge);
+				from.getOutEdges().set(from.getOutEdges().indexOf(fromNodeEdge), newEdge);
 //				to.nodesFrom.set(to.nodesFrom.indexOf(node), from);
-				to.nodesFrom.set(to.nodesFrom.indexOf(toNodeEdge), newEdge);
+				to.getInEdges().set(to.getInEdges().indexOf(toNodeEdge), newEdge);
 				
 				nodesToRemove.add(node);
 			}
@@ -176,21 +175,22 @@ public class ParserProcess {
 		for(int i = 0; i < list.size(); i++){
 			Node node = list.get(i);
 			
-			if(node.getNodeType() == Node.TYPE.Variable && !node.isMainArg && node.nodesFrom.size() == 2 && node.nodesTo.size() == 0){
-				Node n1 = node.nodesFrom.get(0).fromNode;
-				Node n2 = node.nodesFrom.get(1).fromNode;
+			if(node.getType() == Node.TYPE.Variable && !node.isMainArg && node.getFromNodeCount() == 2 && node.getToNodeCount() == 0){
+				List<Node> nodes = node.getFromNodes();
+				Node n1 = nodes.get(0);
+				Node n2 = nodes.get(1);
 				
 				Edge edge1 = n1.getToNodeEdge(node);
 				Edge edge2 = n2.getToNodeEdge(node);
 				
-				Edge newEdge = new Edge(node.getNodeName(), n1, n2, false);
-				newEdge.centerLabel = node.getNodeName();
+				Edge newEdge = new Edge("", "", node.getName(), n1, n2, false);
+				newEdge.centerLabel = node.getName();
 				newEdge.fromLabel = "";
 				newEdge.toLabel = "";
 				
-				n1.nodesTo.set(n1.nodesTo.indexOf(edge1), newEdge);
-				n2.nodesTo.remove(edge2);
-				n2.nodesFrom.add(newEdge);
+				n1.getOutEdges().set(n1.getOutEdges().indexOf(edge1), newEdge);
+				n2.getOutEdges().remove(edge2);
+				n2.getInEdges().add(newEdge);
 				
 				nodesToRemove.add(node);
 			}		
@@ -208,40 +208,39 @@ public class ParserProcess {
 	// in a functor that is in the functor body (VariableNode parameter).
 	public Node traverseClauseBody(AbstractPrologTerm term, Node parentNode, boolean isPartOfClauseHead)
 			throws Exception {
-		System.out.println("in traverseClauseBody");
+		// System.out.println("in traverseClauseBody");
 		
 		if (parentNode == null){
-			System.out.println("in traverseClauseBody, parentNode is null");
+			// System.out.println("in traverseClauseBody, parentNode is null");
 		}else{
-			System.out.println("in traverseClauseBody, parentNode is" + parentNode.getClass().getName());
+			// System.out.println("in traverseClauseBody, parentNode is" + parentNode.getClass().getName());
 		}
-		System.out.println(term.getType());
+		// System.out.println(term.getType());
 		
 		if (term.getType() == PrologTermType.STRUCT) {
-			System.out.println("---struct---");
+			// System.out.println("---struct---");
 
 			// If: there are still clauses separated by comma.
 			if (((PrologStructure) term).getFunctor().getType().toString() == "OPERATOR") {
-				System.out.println("is an operator");
+				// System.out.println("is an operator");
 				if (((PrologStructure) term).getFunctor().getText().equals(",")) {
-					System.out.println("------comma OP------, ");
+					// System.out.println("------comma OP------, ");
 
-					System.out.println(((PrologStructure) term).getFunctor().toString());
-					System.out.println(term.toString() + ((PrologStructure) term).getFunctor().getType().toString());
-					System.out.println(((PrologStructure) term).getFunctor().getType() == PrologTermType.OPERATOR);
+					// System.out.println(((PrologStructure) term).getFunctor().toString());
+					// System.out.println(term.toString() + ((PrologStructure) term).getFunctor().getType().toString());
+					// System.out.println(((PrologStructure) term).getFunctor().getType() == PrologTermType.OPERATOR);
 
-					System.out.println(((PrologStructure) term).getElement(0));
-					System.out.println(((PrologStructure) term).getElement(1));
+					// System.out.println(((PrologStructure) term).getElement(0));
+					// System.out.println(((PrologStructure) term).getElement(1));
 
 					traverseClauseBody(((PrologStructure) term).getElement(0), parentNode, false);
 					traverseClauseBody(((PrologStructure) term).getElement(1), parentNode, false);
 
 				} else if ((((PrologStructure) term).getFunctor()).getText().equals("is")) { // Example: NY is Y +1
-					System.out.println("------is OP------");
-					System.out.println(((Operator) ((PrologStructure) term).getFunctor()).getOperatorType()); // == PrologTermType.XFX
-					System.out.println(((PrologStructure) term).getElement(0)); // == VariableNode i.e. NY.
-					System.out
-							.println(((PrologStructure) ((PrologStructure) term).getElement(1)).getFunctor().getText()); // ==
+					// System.out.println("------is OP------");
+					// System.out.println(((Operator) ((PrologStructure) term).getFunctor()).getOperatorType()); // == PrologTermType.XFX
+					// System.out.println(((PrologStructure) term).getElement(0)); // == VariableNode i.e. NY.
+					// System.out.println(((PrologStructure) ((PrologStructure) term).getElement(1)).getFunctor().getText()); // ==
 					Node variableNode = retrieveNode((((PrologStructure) term).getElement(0).getText()),
 							Node.TYPE.Variable, false);
 					Node arithmeticOpNode = traverseClauseBody(((PrologStructure) term).getElement(1), variableNode,
@@ -253,20 +252,20 @@ public class ParserProcess {
 					return variableNode;
 
 				} else if (((Operator) (((PrologStructure) term).getFunctor())).getOperatorType() == OperatorType.XFX) { // :-, <, >, ==, \=, etc.
-					System.out.println("------ XFX OP------");
+					// System.out.println("------ XFX OP------");
 					String op = ((PrologStructure) term).getFunctor().getText().trim();
 					if(op.equals(":-")){
-						System.out.println("------ :- OP------");
-						System.out.println(((PrologStructure) term).getElement(0)); // == VariableNode i.e. NY.
-						System.out.println(((PrologStructure) term).getElement(1));
-						// System.out.println(((PrologStructure)((PrologStructure)term).getElement(1)).getFunctor().getText());
+						// System.out.println("------ :- OP------");
+						// System.out.println(((PrologStructure) term).getElement(0)); // == VariableNode i.e. NY.
+						// System.out.println(((PrologStructure) term).getElement(1));
+						// // System.out.println(((PrologStructure)((PrologStructure)term).getElement(1)).getFunctor().getText());
 						// // ==
 						traverseClauseBody((((PrologStructure) term).getElement(0)), new MainArgumentNode(""), true);
 						traverseClauseBody((((PrologStructure) term).getElement(1)), null, false); //we are now traversing the clause body, so the parentNode is set to null, as opposed to the original MainArgumentNode.
 					}else if (op.equals(">") || op.equals("<") || op.equals(">=") || op.equals("=<") || op.equals("==")
 							|| op.equals("\\=")) {
-						System.out.println("------equality OP------");
-						System.out.println(((PrologStructure) term).getFunctor().getType());
+						// System.out.println("------equality OP------");
+						// System.out.println(((PrologStructure) term).getFunctor().getType());
 						
 						
 							Node leftNode = retrieveNode((((PrologStructure) term).getElement(0).getText()),
@@ -282,15 +281,15 @@ public class ParserProcess {
 
 							return equalityNode;
 					}else{
-						System.out.println(((PrologStructure) term).getFunctor().getText());
+						// System.out.println(((PrologStructure) term).getFunctor().getText());
 						throw new Exception("an XFX operator not handled");
 					}				
 				} else if (((Operator) (((PrologStructure) term).getFunctor())).getOperatorType() == OperatorType.YFX) { // +,-,*,/
-					System.out.println("------maths OP------");
+					// System.out.println("------maths OP------");
 					// Aim: To make a OpNode and join the input nodes to OpNode.
-					System.out.println(((Operator) (((PrologStructure) term).getFunctor())).getOperatorType());
-					System.out.println(((PrologStructure) term).getFunctor().getText());
-					System.out.println("yay");
+					// System.out.println(((Operator) (((PrologStructure) term).getFunctor())).getOperatorType());
+					// System.out.println(((PrologStructure) term).getFunctor().getText());
+					// System.out.println("yay");
 
 					Node arithmeticOpNode = retrieveNode(((PrologStructure) term).getFunctor().getText(),
 							Node.TYPE.Operator, true);
@@ -307,41 +306,34 @@ public class ParserProcess {
 					return arithmeticOpNode;
 
 				} else {
-					System.out.println(term);
-					System.out.println(((Operator) (((PrologStructure) term).getFunctor())).getOperatorType());
-					System.out.println(((PrologStructure) term).getFunctor().toString());
+					// System.out.println(term);
+					// System.out.println(((Operator) (((PrologStructure) term).getFunctor())).getOperatorType());
+					// System.out.println(((PrologStructure) term).getFunctor().toString());
 					throw new Exception("else statement in traverseClauseBody");
 				}
 			} else { // At this point, the term is a functor e.g. increment(X, Result) 
-				System.out.println("---LAST CLAUSE IN BODY---");
-				System.out.println(((PrologStructure) term).getFunctor().getType());
-				System.out.println("predicate name is " + ((PrologStructure) term).getFunctor().getText());
-				System.out.println(((PrologStructure) term).getElement(0));
-//				System.out.println(((PrologStructure) term).getElement(1));
-				System.out.println(((PrologStructure) term).getArity());
-//				System.out.println("^^^^^Fly " + ((PrologStructure) term).getElement(1).getText());
 				
 				Node fNode = null;				
 				if (!((PrologStructure) term).getFunctor().getText().equals("not") && (parentNode == null || !isPartOfClauseHead)) { 
 					fNode = retrieveNode(((PrologStructure) term).getFunctor().getText(), Node.TYPE.Functor, true);
-					System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+					// System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 				}
 							
 				
 				final int arity = ((PrologStructure) term).getArity();
 				int index = 0;
-				System.out.println("1. arity is " + ((PrologStructure) term).getArity());
-				System.out.println("2. arity is " + arity);
-//				System.out.println("second parameter is " + ((PrologStructure) term).getElement(1));
+				// System.out.println("1. arity is " + ((PrologStructure) term).getArity());
+				// System.out.println("2. arity is " + arity);
+//				// System.out.println("second parameter is " + ((PrologStructure) term).getElement(1));
 				while (index < arity) { // Go through each parameter in the functor.
-					System.out.println("current parameter is " + ((PrologStructure) term).getElement(index));
+					// System.out.println("current parameter is " + ((PrologStructure) term).getElement(index));
 					if (isPartOfClauseHead) {
-						if (parentNode != null && parentNode.getNodeType() == Node.TYPE.MainArgument) { // Current argument is a MainArg, and not a functor nested within a functor e.g. Increment(decrement(X, Result), Result)
-							System.out.println("1.parentNode is " + parentNode.getClass().getName());
+						if (parentNode != null && parentNode.getType() == Node.TYPE.MainArgument) { // Current argument is a MainArg, and not a functor nested within a functor e.g. Increment(decrement(X, Result), Result)
+							// System.out.println("1.parentNode is " + parentNode.getClass().getName());
 							
 							if(((PrologStructure) term).getElement(index).getType() == PrologTermType.LIST){								
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
-								Node varNode = retrieveNode(n.getNodeName(), Node.TYPE.Variable, true);
+								Node varNode = retrieveNode(n.getName(), Node.TYPE.Variable, true);
 								varNode.setMainArg(index + 1);
 								n.addFromNode("list_" + (index+1), varNode);
 								
@@ -353,7 +345,7 @@ public class ParserProcess {
 								n.setMainArg(index + 1);
 							}
 						}else{
-							System.out.println("2.parentNode is null");
+							// System.out.println("2.parentNode is null");
 							
 							boolean nodeExists = true;
 							AbstractPrologTerm currentArg = ((PrologStructure) term).getElement(index);
@@ -378,7 +370,7 @@ public class ParserProcess {
 //							fNode.addFromNode(n);
 						}
 					} else { // in clause body.
-						System.out.println("functor is not in the clause head, i.e. in the clause body.");
+						// System.out.println("functor is not in the clause head, i.e. in the clause body.");
 						
 						boolean nodeExists = false;
 						AbstractPrologTerm currentArg = ((PrologStructure) term).getElement(index);
@@ -395,7 +387,7 @@ public class ParserProcess {
 						Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
 						
 						if(((PrologStructure) term).getFunctor().getText().equals("not") && index == 0){
-							n.setNodeName("!" + n.getNodeName());
+							n.setName("!" + n.getName());
 						}else{
 							if(nodeExists){
 								String functor = ((PrologStructure) term).getFunctor().getText();
@@ -464,26 +456,26 @@ public class ParserProcess {
 					}
 
 					index++;
-					System.out.println("incremented index");
-					System.out.println("index is now " + index + ", arity is " + arity);
+					// System.out.println("incremented index");
+					// System.out.println("index is now " + index + ", arity is " + arity);
 				}
 				
 				return fNode;
 			}
 		} else if (term.getType() == PrologTermType.ATOM) { // Example: NY is Y + 1. 1 is an ATOM. Y is a VAR.
-			System.out.println("---ATOM TERM---");
-			System.out.println(term);
+			// System.out.println("---ATOM TERM---");
+			// System.out.println(term);
 			return retrieveNode(term.getText(), Node.TYPE.Atom, true);
 
 		} else if (term.getType() == PrologTermType.VAR) {
-			System.out.println("---VAR TERM---");
-			System.out.println(term);
-			System.out.println(parentNode == null);
-			System.out.println(isPartOfClauseHead);
+			// System.out.println("---VAR TERM---");
+			// System.out.println(term);
+			// System.out.println(parentNode == null);
+			// System.out.println(isPartOfClauseHead);
 			// return retrieveNode(term.getText(), Node.TYPE.Variable);
 
 			if (term.getText().equals("_")) {
-				System.out.println("_______________________________________________________________________________________________");
+				// System.out.println("_______________________________________________________________________________________________");
 				return retrieveNode(term.getText(), Node.TYPE.Variable, true);
 			} else if(term.getText().startsWith("Out_")){
 				return retrieveNode(term.getText().substring(4, term.getText().length()), Node.TYPE.Variable, false);
@@ -492,9 +484,9 @@ public class ParserProcess {
 			}
 
 		} else if (term.getType() == PrologTermType.LIST) {
-			System.out.println("---LIST TERM---");
-			System.out.println(term);
-			System.out.println(((PrologList) term).getArity());
+			// System.out.println("---LIST TERM---");
+			// System.out.println(term);
+			// System.out.println(((PrologList) term).getArity());
 
 			PrologList list = ((PrologList) term);
 			Node listNode = retrieveNode(null, Node.TYPE.ListOperator, true);
@@ -534,7 +526,7 @@ public class ParserProcess {
 			return listNode;
 
 		} else {
-			System.out.println(term.getType());
+			// System.out.println(term.getType());
 			throw new Exception("cant go here");
 		}
 
@@ -543,7 +535,7 @@ public class ParserProcess {
 
 	private boolean nodeExists(String nodeName){
 		for (Node n : this.nodes) {
-			if (n.getNodeName().equals(nodeName)) {
+			if (n.getName().equals(nodeName)) {
 				return true;
 			}
 		}
@@ -559,7 +551,7 @@ public class ParserProcess {
 
 		if (!isOverride) {
 			for (Node n : this.nodes) {
-				if (n.getNodeName().equals(nodeName)) {
+				if (n.getName().equals(nodeName)) {
 					return n;
 				}
 			}
@@ -581,11 +573,11 @@ public class ParserProcess {
 		} else if (type == Node.TYPE.Operator) {
 			n = new ArithmeticOperatorNode(nodeName);
 		} else {
-			System.out.println(type);
+			// System.out.println(type);
 			throw new Exception("can't go here in retrieveNode");
 		}
 		
-		System.out.println("created a " + type + " node.");
+		// System.out.println("created a " + type + " node.");
 		this.nodes.add(n);
 
 		return n;
@@ -608,20 +600,11 @@ public class ParserProcess {
 				
 				int j = 0;
 				while(sentence != null){
-					System.out.println("Starting new sentence");
+					// System.out.println("Starting new sentence");
 					traverseClauseBody(sentence, new MainArgumentNode(""), true);
 					
-					System.out.println(this.files[i]);
-					System.out.println(sentence);
-					for (Node n : this.nodes) {
-						System.out.print(n.getNodeName() + "\t");
-					}
-					System.out.println();
-					for (Node n : this.nodes) {
-						System.out.print(n.getClass().toString() + "->" + n.getNodeName() + "\t");
-					}
-					System.out.println();
-					System.out.println("expected " + correctNodeCountArray[i][j] + " nodes, getting " + this.nodes.size());
+					// System.out.println();
+					// System.out.println("expected " + correctNodeCountArray[i][j] + " nodes, getting " + this.nodes.size());
 					assert this.nodes.size() == correctNodeCountArray[i][j];
 					this.nodes = new ArrayList<>();
 					listArgumentCount = 1;
@@ -630,7 +613,7 @@ public class ParserProcess {
 					j++;
 				}
 				
-				System.out.println("------REGRESSION TESTED ON FILE " + this.files[i] + "------");
+				// System.out.println("------REGRESSION TESTED ON FILE " + this.files[i] + "------");
 			}
 
 		}catch(Exception e){

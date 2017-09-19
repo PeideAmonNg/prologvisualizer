@@ -9,5 +9,9 @@ sift([X | Tail], N, Result):-
    X =< N,
    sift(Tail, N, Result).
 
+sift([X | Tail], N, Out_Result):-
+   X =< N,
+   sift(Tail, N, Out_Result).
+
 % "Sift" is called "Process" in the diagram version
 

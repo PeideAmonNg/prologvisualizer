@@ -38,7 +38,7 @@ public class SimpleGraphView {
     	for(int i = 0; i < nodes.size(); i++){
     		Node currentNode = nodes.get(i);
     		graph.addVertex(currentNode);    		
-    		List<Edge> fromNodes = currentNode.nodesFrom;
+    		List<Edge> fromNodes = currentNode.getInEdges();
     		
     		for(Edge edge : fromNodes){
 //    			if(edge.toNode.getNodeType() == Node.TYPE.Operator){

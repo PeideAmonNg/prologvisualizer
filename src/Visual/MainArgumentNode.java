@@ -27,7 +27,7 @@ public class MainArgumentNode extends Node {
 
 	}
 
-	public TYPE getNodeType(){
+	public TYPE getType(){
 		return TYPE.MainArgument;
 	}
 

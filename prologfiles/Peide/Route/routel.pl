@@ -15,6 +15,8 @@ road(taupo,gisborne,334).
 road(gisborne,rotorua,291).
 road(rotorua,hamilton,109).
 road(hamilton,auckland,126).
+road(hamilton,wgtn,30).
+road(wgtn,auckland,156).
 
 route(Start, Start, Visited, [Start | Visited], 0).
 

@@ -2,76 +2,68 @@ package Visual;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 public abstract class Node {
 	
 	
-	protected String node;
-//	public List<Node> nodesTo = new ArrayList<>();
-//	public List<Node> nodesFrom = new ArrayList<>();
-	public List<Edge> nodesTo = new ArrayList<>();
-	public List<Edge> nodesFrom = new ArrayList<>();
+	protected String name;
+	private List<Edge> inEdges = new ArrayList<>(); // Edges from other nodes to this node.
+	private List<Edge> outEdges = new ArrayList<>(); // Edges from this node to other nodes.
 	
 	public enum TYPE {Functor, ListOperator, MainArgument, Operator, Variable, Atom};
 	public boolean isMainArg;
 	public int mainArgNo;
 	
-	public Node(String node){
-		this.node = node;
+	public Node(String name){
+		this.name = name;
 	}
 	
-	public void setMainArg(int no){
+	public void setMainArg(int number){
 		this.isMainArg = true;
-		this.mainArgNo = no;
+		this.mainArgNo = number;
 	}
 	
 	public abstract void render();
-	public abstract TYPE getNodeType();
+	public abstract TYPE getType();
 	public abstract Color getNodeColor();
 	
-	public String getNodeName() {
-		return node;
+	public String getName() {
+		return name;
 	}
 	
-	public void setNodeName(String node) {
-		this.node = node;
+	public void setName(String node) {
+		this.name = node;
 	}
 	
 	public void addToNode(String edgeLabel, Node node){
-		System.err.println(edgeLabel);
-		System.err.println(this.getNodeName());
-		System.err.println(this.getNodeType());
-		if(this.getNodeType() == Node.TYPE.ListOperator){
-			Edge e = new Edge("", this, node, true);
-			e.fromLabel = edgeLabel;
-			this.nodesTo.add(e);
+		if(this.getType() == Node.TYPE.ListOperator){
+			this.inEdges.add(new Edge(edgeLabel, "", "", this, node, true));
 			
-		}else if(edgeLabel.startsWith(this.getNodeName())){
-			this.nodesTo.add(new Edge("", this, node, true));
+		}else if(edgeLabel.startsWith(this.getName())){
+			this.inEdges.add(new Edge(this, node, true));
 		}else{
-			this.nodesTo.add(new Edge(edgeLabel, this, node, true));
+			this.inEdges.add(new Edge("", "", edgeLabel, this, node, true));
 		}
 	}
 	
 	public void addFromNode(String edgeLabel, Node node){
-		System.err.println(edgeLabel);
-		System.err.println(node.getNodeName());
-		if(node.getNodeType() == Node.TYPE.ListOperator){
-			Edge e = new Edge("", node, this, true);
-			e.fromLabel = edgeLabel;
-			this.nodesFrom.add(e);
+		if(node.getType() == Node.TYPE.ListOperator){
+			this.outEdges.add(new Edge(edgeLabel, "", "", node, this, true));
 			
-		}else if(edgeLabel.startsWith(node.getNodeName())){
-			this.nodesFrom.add(new Edge("", node, this, true));
+		}else if(edgeLabel.startsWith(node.getName())){
+			this.outEdges.add(new Edge(node, this, true));
 		}else{
-			this.nodesFrom.add(new Edge(edgeLabel, node, this, true));
+			this.outEdges.add(new Edge("", "", edgeLabel, node, this, true));
 		}
 	}
 	
 	public static Node getExistingNode(List<Node> nodes, String name){
 		for(Node n: nodes){
-			if(n.getNodeName().equals(name)){
+			if(n.getName().equals(name)){
 				return n;
 			}
 		}
@@ -80,7 +72,7 @@ public abstract class Node {
 	}
 	
 	public Edge getFromNodeEdge(Node node) throws Exception{
-		for(Edge e : this.nodesFrom){
+		for(Edge e : this.outEdges){
 			if(e.fromNode == node){
 				return e;
 			}
@@ -90,7 +82,7 @@ public abstract class Node {
 	}
 	
 	public Edge getToNodeEdge(Node node) throws Exception{
-		for(Edge e : this.nodesTo){
+		for(Edge e : this.inEdges){
 			if(e.toNode == node){
 				return e;
 			}
@@ -99,9 +91,71 @@ public abstract class Node {
 	
 	}
 	
+	public List<Edge> getInEdges(){
+		return this.outEdges;
+	}
+	
+	public List<Edge> getOutEdges(){
+		return this.inEdges;
+	}
+	
+	public int getFromNodeCount(){
+		return this.outEdges.size();
+	}
+	
+	public int getToNodeCount(){
+		return this.inEdges.size();
+	}
+	
+	public List<Node> getFromNodes(){
+		List<Node> fromNodes = new ArrayList<>();
+		
+		for(Edge edge : this.outEdges){
+			fromNodes.add(edge.fromNode);
+		}
+		
+		return fromNodes;
+	}
+	
+	public List<Node> getToNodes(){
+		List<Node> toNodes = new ArrayList<>();
+		
+		for(Edge edge : this.inEdges){
+			toNodes.add(edge.toNode);
+		}
+		
+		return toNodes;
+	}
+	
+	public void setEdge(Edge oldEdge, Edge newEdge){
+		
+	}
+	
 	@Override
 	public String toString(){
-		return this.getNodeName();
+		return this.getName();
 	}
+	
+	
+	public Node getParentNode(Stack<Node> mainBranch){
+		
+		for(Edge edge : this.inEdges){
+			Node node = edge.toNode;
+			if(mainBranch.contains(node)){
+				return node;
+			}
+		}
+		
+		for(Edge edge : this.outEdges){
+			Node node = edge.fromNode;
+			if(mainBranch.contains(node)){
+				return node;
+			}
+		}
+		
+		return null;
+	}
+
+	
 
 }

@@ -25,7 +25,7 @@ public class FunctorNode extends Node {
 
 	}
 	
-	public TYPE getNodeType(){
+	public TYPE getType(){
 		return TYPE.Functor;
 	}
 
