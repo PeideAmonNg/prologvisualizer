@@ -1,0 +1,11 @@
+road(s,e,l), route(s,f,v,p,d)
+road(start,end,length), route(start,finish,visited,path,distance)
+
+//a node sitting on an edge between two nodes
+route(Start, Finish, Visited, Path, Distance) :-
+	road(Start , End, Length),
+	not(member(End, Visited)),
+	route(End, Finish, [ Start | Visited ], Path, AccumulatedDistance),
+	Distance is AccumulatedDistance + E.
+
+queens(row, column, south-west, south-east, solution), pick(elements, picked element, remaining elements)
