@@ -10,6 +10,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -69,9 +71,9 @@ public class Visualiser implements ActionListener  {
 			    }
 				
 				JTextField metaClauseField = new JTextField(11);
+				JCheckBox directedEdgeEnabled = new JCheckBox("Enable directed edges");
 				JTextArea clauseFieldArea = new JTextArea(5, 20);				
 				JScrollPane clauseField = new JScrollPane(clauseFieldArea); 
-				
 				
 				JButton button = new JButton("Visualise");
 			    
@@ -83,7 +85,13 @@ public class Visualiser implements ActionListener  {
 		        
 				JPanel fieldPanel = new JPanel();
 				fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.PAGE_AXIS));
-				fieldPanel.add(metaClauseField);
+				JPanel topPanel = new JPanel();
+				topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.LINE_AXIS));
+				topPanel.add(metaClauseField);
+				topPanel.add(directedEdgeEnabled);
+				
+				fieldPanel.add(topPanel);
+//				fieldPanel.add(metaClauseField);
 				fieldPanel.add(clauseField);
 		
 				
@@ -129,32 +137,55 @@ public class Visualiser implements ActionListener  {
 			    		try{
 			    			
 			    			String metaClause = metaClauseField.getText().trim();
-			    			MetaPredicate pred = null;
+			    			List<MetaPredicate> preds = new ArrayList<>();
+			    			String[] clauses;
 			    			
 			    			if(!metaClause.equals("")){
-			    				int openBracIndex = metaClause.indexOf("("), closeBracIndex = metaClause.indexOf(")");
-				    			String[] args = metaClause.substring(openBracIndex + 1, closeBracIndex).split(",");
-				    			int arity = args.length;
-				    			
-				    			pred = new MetaPredicate(metaClause.substring(0, openBracIndex), arity);
-				    			
-				    			for(int i = 0; i < args.length; i++){
-				    				pred.addRoleName(args[i].trim().toLowerCase());
-				    			}
+			    				System.err.println(metaClause);
+			    				clauses = metaClause.split("\\)\\s*,");
+			    				
+			    				for(int i = 0; i < clauses.length; i++) {
+			    					String tempClause = clauses[i].trim();
+			    					if(!tempClause.endsWith(")")) {
+			    						tempClause = tempClause + ")";
+			    					}
+			    					clauses[i] = tempClause;
+
+			    				}
+			    				
+			    				
+			    				if(clauses != null) {
+			    					for(String mc : clauses) {
+			    						int openBracIndex = mc.indexOf("("), closeBracIndex = mc.indexOf(")");
+						    			String[] args = mc.substring(openBracIndex + 1, closeBracIndex).split(",");
+						    			int arity = args.length;
+						    			
+						    			MetaPredicate pred = new MetaPredicate(mc.substring(0, openBracIndex), arity);
+						    			preds.add(pred);
+						    			
+						    			for(int i = 0; i < args.length; i++){
+						    				pred.addRoleName(args[i].trim().toLowerCase());
+						    			}
+						    			
+						    			System.err.println(pred.getRoleNames());
+			    					}
+			    				}
+			    				
+			    				
 				    			
 			    			}
 			    			
 			    			
 			    			
-				    		ParserProcess pp = new ParserProcess(pred);
+				    		ParserProcess pp = new ParserProcess(preds);
 				    		List<Node> nodes = pp.traverse(clauseFieldArea.getText().trim());
 				    		
-				    		Stack<Node> mainBranch = findMainBranch(nodes);
+				    		Stack<Node> mainBranch = findMainBranch(nodes, directedEdgeEnabled.isSelected());
 				    		
 				    		
 				    		
 				    		frame.getContentPane().removeAll();
-				    		VisualizationViewer vv = (VisualizationViewer) GraphExtension.visualise(nodes, mainBranch);
+				    		VisualizationViewer vv = (VisualizationViewer) GraphExtension.visualise(nodes, mainBranch, directedEdgeEnabled.isSelected());
 		//		    		JPanel tempPanel = new JPanel();
 				    		final GraphZoomScrollPane tempPanel = new GraphZoomScrollPane(vv);
 				    		tempPanel.setPreferredSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT));
@@ -289,9 +320,9 @@ public class Visualiser implements ActionListener  {
         onPath.remove(v);
     }
 		
-	public Stack<Node> findMainBranch(List<Node> nodes){
+	public Stack<Node> findMainBranch(List<Node> nodes, boolean directedEdgeEnabled){
 		
-		SimpleGraphView gv = new SimpleGraphView(nodes);
+		SimpleGraphView gv = new SimpleGraphView(nodes, directedEdgeEnabled);
 		Set<Node> inputNodes = new HashSet<>();
 		Node outputNode = null;
 		
@@ -316,7 +347,7 @@ public class Visualiser implements ActionListener  {
 		// Meaning there is no output node for this Prolog clause. In this case, we make one up. Find paths between two input nodes with most list processors.
 		if(mainBranch == null){ 
 
-			gv = new SimpleGraphView(nodes);
+			gv = new SimpleGraphView(nodes, directedEdgeEnabled);
 			inputNodes = new HashSet<>();
 			Set<Node >outputNodes = new HashSet<>();
 			

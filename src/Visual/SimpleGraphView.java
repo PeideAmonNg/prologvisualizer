@@ -9,7 +9,7 @@ public class SimpleGraphView {
 
     public final Graph<Node, Edge> graph;
 
-    public SimpleGraphView(List<Node> nodes) {    	
+    public SimpleGraphView(List<Node> nodes, boolean directedEdgeEnabled) {    	
 //    	AbstractGraph<V,E>	Abstract implementation of the Graph interface.
 //    	AbstractTypedGraph<V,E>	An abstract class for graphs whose edges all have the same EdgeType.
 //    	DelegateForest<V,E>	An implementation of Forest that delegates to a specified DirectedGraph instance.
@@ -35,27 +35,48 @@ public class SimpleGraphView {
     	
     	int id = 0;
     	
+//    	for(int i = 0; i < nodes.size(); i++){
+//    		Node currentNode = nodes.get(i);
+//    		graph.addVertex(currentNode);    		
+//    		List<Edge> fromNodes = currentNode.getInEdges();
+//    		
+//    		for(Edge edge : fromNodes){
+////    			if(edge.toNode.getNodeType() == Node.TYPE.Operator){
+////    				
+////    			}
+////    			if(edge.toNode.isMainArg){
+//    			if(edge.isDirected){
+////    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.DIRECTED);
+//    				graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.DIRECTED);
+//    			}else{
+////    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+//    				graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+//    			}
+////    			}else{
+////    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+////    			}
+//    			
+//    		}
+//    	}
+    	
+    	EdgeType edgeType = directedEdgeEnabled ? EdgeType.DIRECTED : EdgeType.UNDIRECTED;
+    	
     	for(int i = 0; i < nodes.size(); i++){
     		Node currentNode = nodes.get(i);
     		graph.addVertex(currentNode);    		
     		List<Edge> fromNodes = currentNode.getInEdges();
     		
     		for(Edge edge : fromNodes){
-//    			if(edge.toNode.getNodeType() == Node.TYPE.Operator){
-//    				
-//    			}
-//    			if(edge.toNode.isMainArg){
-    			if(edge.isDirected){
-//    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.DIRECTED);
-    				graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.DIRECTED);
-    			}else{
-//    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
-    				graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+    			if(edgeType == EdgeType.DIRECTED) {
+    				if(!edge.isDirected) {
+    					graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
+    				}else {
+    					graph.addEdge(edge, edge.fromNode, currentNode, EdgeType.DIRECTED);
+    				}
+    			}else {
+    				graph.addEdge(edge, edge.fromNode, currentNode, edgeType);
     			}
-//    			}else{
-//    				graph.addEdge(edge.label + "_" + id++, edge.fromNode, currentNode, EdgeType.UNDIRECTED);
-//    			}
-    			
+				
     		}
     	}
     	

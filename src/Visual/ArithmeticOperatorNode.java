@@ -18,6 +18,7 @@ public class ArithmeticOperatorNode extends Node {
 
 	}
 
+	@Override
 	public TYPE getType(){
 		return TYPE.Operator;
 	}
@@ -31,4 +32,15 @@ public class ArithmeticOperatorNode extends Node {
 		
 		return Color.green;
 	}
+	
+	
+	public String getLeftLabel() {
+		String name = super.name.trim();
+		if(name.equals("+")) return "sum";
+		else if(name.equals("-")) return "difference";
+		else if(name.equals("*")) return "product";
+		else if(name.equals("/")) return "quotient";
+		else return "";
+	}
+	
 }

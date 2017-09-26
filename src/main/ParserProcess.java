@@ -28,7 +28,7 @@ public class ParserProcess {
 	private List<Node> nodes = new ArrayList<>();
 	private List<List<Node>> predicateClauses = new ArrayList<List<Node>>();
 
-	private MetaPredicate pred; 
+	private List<MetaPredicate> preds; 
 	
 	private int listArgumentCount = 1;
 	private int listOperatorNodeCount = 1;
@@ -51,8 +51,8 @@ public class ParserProcess {
 	//END-------------------------------Variables used for regressionTestBuiltNodeCount()-------------------------------END
 	
 
-	public ParserProcess(MetaPredicate pred) {
-		this.pred = pred;
+	public ParserProcess(List<MetaPredicate> preds) {
+		this.preds = preds;
 //		run();
 //		regressionTestBuiltNodeCount();
 	}
@@ -112,15 +112,15 @@ public class ParserProcess {
 	
 	public List<Node> traverse(String sent) throws Exception{
 		initializeFields();
+	
+		final PrologParser parser = new PrologParser(null);
+		AbstractPrologTerm sentence = parser.nextSentence(sent);
+		traverseClauseBody(sentence, new MainArgumentNode(""), true);
+		predicateClauses.add(this.nodes);
+		initializeFields();
 		
-			final PrologParser parser = new PrologParser(null);
-			AbstractPrologTerm sentence = parser.nextSentence(sent);
-			traverseClauseBody(sentence, new MainArgumentNode(""), true);
-			predicateClauses.add(this.nodes);
-			initializeFields();
-			trimPaths();
-			return predicateClauses.get(0);
-			
+		trimPaths();
+		return predicateClauses.get(0);
 		
 	}
 	
@@ -129,6 +129,8 @@ public class ParserProcess {
 		// System.out.println("in trim path");
 		// System.out.println(list.size());
 		
+		System.out.println(predicateClauses.get(0));
+		
 		List<Node> nodesToRemove = new ArrayList<>();
 		
 		// Removing VariableNode with only one incoming edge and one outgoing edge.
@@ -136,7 +138,7 @@ public class ParserProcess {
 			Node node = list.get(i);
 			
 			if(node.getType() == Node.TYPE.Variable && !node.isMainArg && node.getFromNodeCount() == 1 && node.getToNodeCount() == 1){
-				// System.err.println("-------------->  " + node.getName());
+				System.err.println("-------------->  " + node.getName());
 				Node from = node.getFromNodes().get(0);
 				Node to = node.getToNodes().get(0);
 				Edge fromNodeEdge = from.getToNodeEdge(node);
@@ -149,10 +151,14 @@ public class ParserProcess {
 					newEdge.fromLabel = fromNodeEdge.fromLabel;
 					
 //					newEdge.fromLabel = node.getNodeName();
+
+					System.out.println(fromNodeEdge.fromLabel + " " + fromNodeEdge.toLabel); 	
 					
 				}else{
-					newEdge = new Edge("", "", toNodeEdge.toLabel, from, to, true);
+					newEdge = new Edge(fromNodeEdge.fromLabel, "", toNodeEdge.toLabel, from, to, true);
 					newEdge.fromLabel = fromNodeEdge.fromLabel;
+					
+					System.out.println(fromNodeEdge.fromLabel + " " + fromNodeEdge.toLabel);
 				}
 				
 				
@@ -184,9 +190,11 @@ public class ParserProcess {
 				Edge edge2 = n2.getToNodeEdge(node);
 				
 				Edge newEdge = new Edge("", "", node.getName(), n1, n2, false);
-				newEdge.centerLabel = node.getName();
-				newEdge.fromLabel = "";
-				newEdge.toLabel = "";
+//				newEdge.centerLabel = node.getName();
+//				newEdge.fromLabel = "";
+//				newEdge.toLabel = "";
+				newEdge.fromLabel = edge1.fromLabel;
+				newEdge.toLabel = edge2.fromLabel;
 				
 				n1.getOutEdges().set(n1.getOutEdges().indexOf(edge1), newEdge);
 				n2.getOutEdges().remove(edge2);
@@ -245,9 +253,13 @@ public class ParserProcess {
 							Node.TYPE.Variable, false);
 					Node arithmeticOpNode = traverseClauseBody(((PrologStructure) term).getElement(1), variableNode,
 							false);
-					variableNode.addFromNode("is", arithmeticOpNode);
+					variableNode.addFromNode("", arithmeticOpNode);					
+					arithmeticOpNode.addToNode("", variableNode);
 					
-					arithmeticOpNode.addToNode("is", variableNode);
+					if(arithmeticOpNode instanceof ArithmeticOperatorNode) {
+						variableNode.getFromNodeEdge(arithmeticOpNode).fromLabel = ((ArithmeticOperatorNode) arithmeticOpNode).getLeftLabel();
+						arithmeticOpNode.getToNodeEdge(variableNode).fromLabel = ((ArithmeticOperatorNode) arithmeticOpNode).getLeftLabel();
+					}
 
 					return variableNode;
 
@@ -335,9 +347,11 @@ public class ParserProcess {
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
 								Node varNode = retrieveNode(n.getName(), Node.TYPE.Variable, true);
 								varNode.setMainArg(index + 1);
-								n.addFromNode("list_" + (index+1), varNode);
-								
+								n.addFromNode("", varNode);
 								varNode.addToNode("list_" + (index+1), n);
+								
+								n.getFromNodeEdge(varNode).toLabel = "list_" + (index+1);
+								varNode.getToNodeEdge(n).toLabel = "list_" + (index+1);
 							}else{
 //								Node mainArgNode = retrieveNode("Arg", Node.TYPE.MainArgument, true);
 								Node n = traverseClauseBody(((PrologStructure) term).getElement(index), null, isPartOfClauseHead);
@@ -404,11 +418,19 @@ public class ParserProcess {
 //										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
 //									}
 									
-									fNode.addFromNode(edgeLabel + "_" + (index+1), n);
-									n.addToNode(edgeLabel + "_" + (index+1), fNode);
 									
-									if(pred != null){
-										fNode.getFromNodeEdge(n).toLabel = this.pred.getRoleName(index);
+									fNode.addFromNode(edgeLabel + "_" + (index+1), n);
+//									n.addToNode(edgeLabel + "_" + (index+1), fNode);
+									n.addToNode("" + "_" + (index+1), fNode);
+									
+//									if(n.getType() == Node.TYPE.ListOperator) {
+//										edgeLabel = "list";
+//									}
+									
+									
+									String roleName = getRoleName(((PrologStructure) term).getFunctor().getText(), ((PrologStructure) term).getArity(), index);
+									if(roleName != null){
+										fNode.getFromNodeEdge(n).toLabel = roleName;
 									}
 									
 								}
@@ -423,21 +445,28 @@ public class ParserProcess {
 								}else{
 //									n.addFromNode("arg" + (index+1), fNode);
 //									fNode.addToNode("arg" + (index+1), n);
-									String edgeLabel = "";
+									
 									
 //									if(edgeLabel.startsWith("Out_")){
 //										edgeLabel = edgeLabel.substring(4, edgeLabel.length());
 //									}
 									
 //									n.addFromNode(edgeLabel + "_" + (index+1), fNode);
+									String roleName = getRoleName(((PrologStructure) term).getFunctor().getText(), ((PrologStructure) term).getArity(), index);
 									
+									String edgeLabel = roleName != null ? roleName : "";
 									n.addFromNode(edgeLabel + "_" + (index+1), fNode);
 									fNode.addToNode(edgeLabel + "_" + (index+1), n);
 									
-									if(pred != null){
-										String label = this.pred.getRoleName(index); 
-										n.getFromNodeEdge(fNode).fromLabel = label;
+									if(roleName != null){
+										n.getFromNodeEdge(fNode).fromLabel = roleName;
+										fNode.getToNodeEdge(n).fromLabel = roleName;
 									}
+									
+//									if(pred != null){
+//										String label = this.pred.getRoleName(index); 
+//										n.getFromNodeEdge(fNode).fromLabel = label;
+//									}
 									
 								}
 							}
@@ -451,7 +480,7 @@ public class ParserProcess {
 //							n.setNodeName("!" + n.getNodeName());
 //						}else{
 //							fNode.addFromNode(n);
-//						}
+//						}v
 						
 					}
 
@@ -583,6 +612,16 @@ public class ParserProcess {
 		return n;
 	}
 
+	
+	private String getRoleName(String name, int arity, int arg) {
+		for(MetaPredicate mp : this.preds) {
+			if(mp.getPred().equals(name + "/" + arity)) {
+				return mp.getRoleName(arg);
+			}
+		}
+		
+		return null;
+	}
 	
 	
 	// Go through each file, build the structure of nodes and test the number of nodes expected to be correctly generated for each clause.

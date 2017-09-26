@@ -45,6 +45,8 @@ public abstract class Node {
 			
 		}else if(edgeLabel.startsWith(this.getName())){
 			this.inEdges.add(new Edge(this, node, true));
+		}else if(node.getType() == Node.TYPE.Variable) {
+			this.inEdges.add(new Edge(this, node, true));
 		}else{
 			this.inEdges.add(new Edge("", "", edgeLabel, this, node, true));
 		}
@@ -55,6 +57,8 @@ public abstract class Node {
 			this.outEdges.add(new Edge(edgeLabel, "", "", node, this, true));
 			
 		}else if(edgeLabel.startsWith(node.getName())){
+			this.outEdges.add(new Edge(node, this, true));
+		}else if(this.getType() == Node.TYPE.Variable) {
 			this.outEdges.add(new Edge(node, this, true));
 		}else{
 			this.outEdges.add(new Edge("", "", edgeLabel, node, this, true));

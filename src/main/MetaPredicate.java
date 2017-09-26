@@ -25,5 +25,9 @@ public class MetaPredicate {
 	
 	public String getPred(){
 		return name + "/" + arity;
+	}	
+	
+	public List<String> getRoleNames(){
+		return this.roleNames;
 	}
 }

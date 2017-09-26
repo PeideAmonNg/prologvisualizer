@@ -44,8 +44,8 @@ import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 public class GraphExtension {
 	
-	public static JPanel visualise(List<Node> predicateClauses, Stack<Node> mainBranch){
-		SimpleGraphView sgv = new SimpleGraphView(predicateClauses); //We create our graph in here
+	public static JPanel visualise(List<Node> predicateClauses, Stack<Node> mainBranch, boolean directedEdgeEnabled){
+		SimpleGraphView sgv = new SimpleGraphView(predicateClauses, directedEdgeEnabled); //We create our graph in here
 		// The Layout<V, E> is parameterized by the vertex and edge types
 //		Layout<Node, String> layout = new CircleLayout<>(sgv.graph);
 //		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
@@ -91,13 +91,6 @@ public class GraphExtension {
 			}
 		};
 		
-		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
-//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.CubicCurve<Node, Edge>());
-//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<Node, Edge>());		
-//		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
-		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
-	
-//		vv.getRenderContext().setLabelOffset(-5);
 		
 		DefaultEdgeLabelRenderer edgeLabelRenderer = new DefaultEdgeLabelRenderer(Color.black){
 	        @Override
@@ -107,7 +100,7 @@ public class GraphExtension {
 	        {
 	            super.getEdgeLabelRendererComponent(
 	                vv, value, font, isSelected, edge);
-	            this.setForeground(Color.BLUE);	            
+//	            this.setForeground(Color.BLUE);	            
 	            
 	            VisualizationViewer vvv = ((VisualizationViewer)vv);
 	            Layout<Node, Edge> layout = vvv.getGraphLayout();
@@ -175,13 +168,21 @@ public class GraphExtension {
 	            			nbsp = getNbsp(3);
 	            		}
 	            		
+//	            		this.setText("<html>" + 
+//	            				"<strong><font color='red'>" + fromLabel + "</font></strong>" +
+//	            				nbsp +
+//	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
+//	            				nbsp + 
+//		            			"<strong><font color='blue'>" + toLabel + "</font></strong>" +
+//	            				"</html>");
+	            		
 	            		this.setText("<html>" + 
-	            				"<strong><font color='red'>" + fromLabel + "</font></strong>" +
+	            				fromLabel +
 	            				nbsp +
-	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
+	            				centerLabel + 
 	            				nbsp + 
-		            			"<strong><font color='blue'>" + toLabel + "</font></strong>" +
-	            				"</html>");
+	            				toLabel +
+		            			"</html>");
 	            		
 
 //	            		double quarter = distance * 0.25;
@@ -220,13 +221,21 @@ public class GraphExtension {
 	            			nbsp = getNbsp(3);
 	            		}
 	            		
-	            		this.setText("<html>" +  
-	            				"<strong><font color='blue'>" + toLabel + "</font></strong>" +
+//	            		this.setText("<html>" +  
+//	            				"<strong><font color='blue'>" + toLabel + "</font></strong>" +
+//	            				nbsp +
+//	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
+//	            				nbsp + 
+//		            			"<strong><font color='red'>" + fromLabel + "</font></strong>" +
+//	            				"</html>");
+//	            		
+	            		this.setText("<html>" +
+	            				toLabel +
 	            				nbsp +
-	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
-	            				nbsp + 
-		            			"<strong><font color='red'>" + fromLabel + "</font></strong>" +
-	            				"</html>");
+	            				centerLabel + 
+	            				nbsp +
+	            				fromLabel + 
+		            			"</html>");
 	            		
 	            		
 //	            		double quarter = distance * 0.25;
@@ -284,7 +293,6 @@ public class GraphExtension {
 	        
 	    };
 	    
-		vv.getRenderContext().setEdgeLabelRenderer(edgeLabelRenderer);
 		
 //		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
 //            public String transform(Edge e) {
@@ -312,17 +320,7 @@ public class GraphExtension {
 //            }
 //        });
 					
-		vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, Edge>, Edge>, Number>() {
-			@Override
-			public Number transform(Context<Graph<Node, Edge>, Edge> arg0) {          
-                return 0.5; //halfway on an edge.
-			}
-        });
 		
-		
-		
-		 
-		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, Edge>(5, 5, 0));
 		
 	    DefaultVertexLabelRenderer vertexLabelRenderer = new DefaultVertexLabelRenderer(Color.black){
 	        @Override
@@ -395,7 +393,15 @@ public class GraphExtension {
 	        	}else if(nodeType == Node.TYPE.Variable){
 	        		if(i.getFromNodeCount() + i.getToNodeCount() >= 3){ // A variable in a Junction.
 	        			shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);	   	        			
-	        		}
+	        		}else {
+	        			final GeneralPath p0 = new GeneralPath();
+						int sizeFactor = 10;
+						p0.moveTo(0.0f, -sizeFactor); //start at point 1
+						p0.lineTo(sizeFactor*2, sizeFactor); //go to point 2
+						p0.lineTo(-sizeFactor*2, sizeFactor); //go to point 3
+						p0.closePath();
+		        		shape = p0;
+	        		}	   
 	        	}else if(nodeType == Node.TYPE.Atom){ // A variable not in a Junction i.e. a triangle.
 					final GeneralPath p0 = new GeneralPath();
 					int sizeFactor = 10;
@@ -499,6 +505,24 @@ public class GraphExtension {
 	    	
 	    };
 	    
+	    vv.getRenderContext().setEdgeLabelClosenessTransformer(new Transformer<Context<Graph<Node, Edge>, Edge>, Number>() {
+			@Override
+			public Number transform(Context<Graph<Node, Edge>, Edge> arg0) {          
+                return 0.5; //halfway on an edge.
+			}
+        });
+	    
+
+		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
+//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.CubicCurve<Node, Edge>());
+//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<Node, Edge>());		
+//		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
+		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+//
+		vv.getRenderContext().setEdgeLabelRenderer(edgeLabelRenderer);
+//		vv.getRenderContext().setLabelOffset(-5);
+		 
+		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, Edge>(5, 5, 0));
 	    vv.getRenderContext().setVertexFillPaintTransformer(vertexColor);
 	    vv.getRenderContext().setVertexShapeTransformer(vertexShape);    
 	    vv.getRenderContext().setVertexLabelRenderer(vertexLabelRenderer);
