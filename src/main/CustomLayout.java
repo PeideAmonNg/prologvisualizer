@@ -1,5 +1,7 @@
 package main;
 
+import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ public class CustomLayout extends ISOMLayout<Node, Edge>{
 	
 	@Override
 	public void step(){
+		
 		
 		if(this.mainBranch == null){
 			super.step();
@@ -302,6 +305,7 @@ public class CustomLayout extends ISOMLayout<Node, Edge>{
 			}
 			
 		}
+		
 	}
 	
 	private int getSiblingCount(Node node, Set<Node> nodes, Node parentNode){

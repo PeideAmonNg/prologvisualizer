@@ -26,5 +26,14 @@
 	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/swingx-all-1.6.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/TopologicalSorting.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/guava-15.0-rc1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/args4j-2.0.29.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/jcip-annotations-1.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/timingframework-1.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/xercesImpl-2.8.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/xml-apis-1.3.03.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/xmlParserAPIs-2.6.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/zgrviewer-0.10.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/zvtm-core-0.11.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Peide/workspace/prologvisualizer/libraries/zrgviewer/zvtm-svg-0.2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

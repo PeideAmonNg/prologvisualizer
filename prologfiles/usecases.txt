@@ -9,3 +9,26 @@ route(Start, Finish, Visited, Path, Distance) :-
 	Distance is AccumulatedDistance + E.
 
 queens(row, column, south-west, south-east, solution), pick(elements, picked element, remaining elements)
+
+sift(input list, threshold val, filtered list)
+
+sift([X | Tail], N, Out_Result):-
+   X =< N,
+   sift(Tail, N, Out_Result).
+   
+roadroad(start,end,length), route(start,finish,visited,path,distance)
+
+route(Start, Finish, Visited, Path, Distance) :-
+	roadroad(Start , End, Length),
+	not(member(End, Visited)),
+	route(End, Finish, [ Start | Visited ], Path, AccumulatedDistance),
+	Distance is AccumulatedDistance + Length.
+
+[headlabel="leftOp", taillabel="accDist"]
+
+move(N,X,Y,Z) :- 
+     N>1, 
+     M is N-1, 
+     move(M,X,Z,Y), 
+     move(1,X,Y,_), 
+     move(M,Z,Y,X).  

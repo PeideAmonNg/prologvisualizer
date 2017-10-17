@@ -5,8 +5,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Paint;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
@@ -33,16 +35,28 @@ import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
+import edu.uci.ics.jung.graph.util.Pair;
+import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.decorators.DirectionalEdgeArrowTransformer;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import edu.uci.ics.jung.visualization.renderers.BasicEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultEdgeLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.DefaultVertexLabelRenderer;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
+import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
 public class GraphExtension {
+
+	public static final int mainArgRadius = 30;
+	public static final int listOpRadius = 22;
+	public static final int arithmeticOpRadius = 20;
+	public static final int functorOpHeight = 20;
+	public static final int variableRadius = 5;
+	public static final int listPredicateWidth = 30;
+	public static final int listPredicateHeight = 25;
 	
 	public static JPanel visualise(List<Node> predicateClauses, Stack<Node> mainBranch, boolean directedEdgeEnabled){
 		SimpleGraphView sgv = new SimpleGraphView(predicateClauses, directedEdgeEnabled); //We create our graph in here
@@ -50,19 +64,21 @@ public class GraphExtension {
 //		Layout<Node, String> layout = new CircleLayout<>(sgv.graph);
 //		FRLayout<Node, String> layout = new FRLayout<>(sgv.graph);
 //		FRLayout2<Node, String> layout = new FRLayout2<>(sgv.graph);
-//		Layout<Node, Edge> layout = new ISOMLayout<>(sgv.graph);
-		ISOMLayout<Node, Edge> layout = new CustomLayout(sgv.graph, mainBranch);
+		Layout<Node, Edge> layout = new ISOMLayout<>(sgv.graph);
+		
 //		ExtendedISOMLayout<Node, Edge> layout = new ExtendedISOMLayout(sgv.graph, mainBranch);
 //		SpringLayout<Node, Edge> layout = new SpringLayout<>(sgv.graph);
 //		layout.initialize();
-		
-		
-
-		
-		
 //		
+//		ISOMLayout<Node, Edge> layout = new CustomLayout(sgv.graph, mainBranch);
+//		ISOMLayout<Node, Edge> layout = new ExtendedIsomLayout2(sgv.graph, mainBranch);
+//		
+//		Layout<Node, Edge> layout; //create a layout
+//		layout = new TreeLayout<Node, Edge>((Forest<Node, Edge>) sgv.graph); 
+		
 //		Layout<Node, String> layout = new KKLayout<>(sgv.graph);
-//		DAGLayout<Node, String> layout = new DAGLayout<>(sgv.graph);
+//		DAGLayout<Node, Edge> layout = new DAGLayout<>(sgv.graph);
+//		layout.initialize();
 		
 		//-----FRLayout configuration------//
 //		layout.setRepulsionMultiplier(0.7);
@@ -91,237 +107,302 @@ public class GraphExtension {
 			}
 		};
 		
-		
-		DefaultEdgeLabelRenderer edgeLabelRenderer = new DefaultEdgeLabelRenderer(Color.black){
-	        @Override
-	        public <E> Component getEdgeLabelRendererComponent(
-	            JComponent vv, Object value, Font font, 
-	            boolean isSelected, E edge) 
-	        {
-	            super.getEdgeLabelRendererComponent(
-	                vv, value, font, isSelected, edge);
-//	            this.setForeground(Color.BLUE);	            
-	            
-	            VisualizationViewer vvv = ((VisualizationViewer)vv);
-	            Layout<Node, Edge> layout = vvv.getGraphLayout();
-	            Graph g = vvv.getGraphLayout().getGraph();
-	            Object[] ee = g.getEdges().toArray();
-//	            Edge e = (Edge) ee[0];
-	            
-	            Edge e = (Edge) edge;
-	            Node fromNode = e.fromNode;
-	            Node toNode = e.toNode;
-	            
-	            Point2D from = layout.transform(fromNode);
-	            Point2D to = layout.transform(toNode);
-	            
-	            // System.err.println("------------------------------>" + from);
-	            
-	            double x1 = from.getX(), y1 = from.getY(), x2 = to.getX(), y2 = to.getY();
-	            double distance = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
-	            distance = distance - 35; //radius of nodes.
-	            
-	            String fromLabel = e.fromLabel, toLabel = e.toLabel, centerLabel = e.centerLabel;
-	            
-	            if(fromLabel.contains("_")){
-	            	fromLabel = fromLabel.split("_")[0];
-	            }
-	            
-	            if(toLabel.contains("_")){
-	            	toLabel = toLabel.split("_")[0];
-	            }
-	            
-	            // System.err.println("---" + fromLabel + " --- " + toLabel);
-	            
-	            double fromLabelSize = e.fromLabel.length() * 5.0, toLabelSize = e.toLabel.length() * 5.0, centerLabelSize = e.centerLabel.length() * 5.0; 
-	            
-	            int space = (int) ((distance - (fromLabelSize + toLabelSize + centerLabelSize)) / 5.0);
-	            
-	            String spaceFiller = "";
-	            
-//	            if(distance <= 250){
-//	            	space = (int)(space * 0.7);
-//	            }else if(distance <= 350){
-//	            	space = (int)(space * 0.8);
-//	            }
-	            
-	            for(int i = 0; i < space; i++){
-	            	spaceFiller += "&nbsp;";
-	            }
-	            
-	            
-	            double spaceWidth = 3.5;
-	            double offset = 0.5;
-	            
-	            if(x1 <= x2){	            	
-//	            	if(centerLabel.equals("")){
-//	            		this.setText("<html><strong><font color='red'>" + fromLabel + "</font></strong>" + spaceFiller +
-//		            			"<strong><font color='blue'>" + toLabel + "</font></strong></html>");
-//	            	}else{
-	            		
-	            		double spaceLeft = distance - fromLabelSize - centerLabelSize - toLabelSize;
-	            		String nbsp = getNbsp(((int)(spaceLeft / 3.0) / 2) - 7);
-	            		
-	            		String startSpace = getNbsp(1); 
-	            		if(distance < 120){
-	            			startSpace = "";
-	            			nbsp = getNbsp(3);
-	            		}
-	            		
-//	            		this.setText("<html>" + 
-//	            				"<strong><font color='red'>" + fromLabel + "</font></strong>" +
-//	            				nbsp +
-//	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
-//	            				nbsp + 
-//		            			"<strong><font color='blue'>" + toLabel + "</font></strong>" +
-//	            				"</html>");
-	            		
-	            		this.setText("<html>" + 
-	            				fromLabel +
-	            				nbsp +
-	            				centerLabel + 
-	            				nbsp + 
-	            				toLabel +
-		            			"</html>");
-	            		
-
-//	            		double quarter = distance * 0.25;
-//	            		double totalOffset = (quarter * offset);
-	            		
-//	            		if(distance < 200) totalOffset = quarter * offset * 1.5;
-//	            		
-//	            		double first = ((quarter - (fromLabelSize / 2.0) - totalOffset) / spaceWidth);
-//	            		double second = (quarter - (fromLabelSize / 2.0) + (centerLabelSize / 2.0) + totalOffset) / spaceWidth;
-//	            		double third = (quarter - ((centerLabelSize / 2.0) + (toLabelSize / 2.0))) / spaceWidth;
-//	            		double fourth = ((quarter - (toLabelSize / 2.0)) / spaceWidth);
-//	            		
-//	            		this.setText("<html>" + 
-//	            				getNbsp((int)first) +  
-//	            				"<strong><font color='red'>" + fromLabel + "</font></strong>" +
-//	            				getNbsp((int)second) +
-//	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
-//	            				getNbsp((int)third) + 
-//		            			getNbsp((int)fourth) + 
-//		            			"<strong><font color='blue'>" + toLabel + "</font></strong>" +
-//	            				"</html>");
-//	            	}
-	            	
-	            }else{
-//	            	if(centerLabel.equals("")){
-//	            		this.setText("<html><strong><font color='blue'>" + toLabel + "</font></strong>" + spaceFiller + 
-//		            			"<strong><font color='red'>" + fromLabel + "</font></strong></html>");
-//	            	}else{
-	            	
-		            	double spaceLeft = distance - fromLabelSize - centerLabelSize - toLabelSize;
-	            		String nbsp = getNbsp(((int)(spaceLeft / 3.0) / 2) - 7);
-	            		
-	            		String startSpace = getNbsp(6); 
-	            		if(distance < 120){
-	            			startSpace = "";
-	            			nbsp = getNbsp(3);
-	            		}
-	            		
-//	            		this.setText("<html>" +  
-//	            				"<strong><font color='blue'>" + toLabel + "</font></strong>" +
-//	            				nbsp +
-//	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
-//	            				nbsp + 
-//		            			"<strong><font color='red'>" + fromLabel + "</font></strong>" +
-//	            				"</html>");
-//	            		
-	            		this.setText("<html>" +
-	            				toLabel +
-	            				nbsp +
-	            				centerLabel + 
-	            				nbsp +
-	            				fromLabel + 
-		            			"</html>");
-	            		
-	            		
-//	            		double quarter = distance * 0.25;
-//	            		double totalOffset = (quarter * offset);
-//	            		
-//	            		double first = (quarter - (fromLabelSize / 2.0) - totalOffset) / spaceWidth;
-//	            		double second = (quarter - ((fromLabelSize / 2.0) + (centerLabelSize / 2.0)) + totalOffset) / spaceWidth;
-//	            		double third = (quarter - ((centerLabelSize / 2.0) + (toLabelSize / 2.0))) / spaceWidth;
-//	            		double fourth = (quarter - (toLabelSize / 2.0)) / spaceWidth;
-//	            		
-//	            		this.setText("<html>" + 
-//		            			"<strong><font color='blue'>" + toLabel + "</font></strong>" +
-//	            				getNbsp((int)fourth) +  
-//	            				getNbsp((int)third) +
-//	            				"<strong><font color='purple'>" + centerLabel + "</font></strong>" +
-//	            				getNbsp((int)second) + 
-//	            				"<strong><font color='red'>" + fromLabel + "</font></strong>" +
-//		            			getNbsp((int)first) + 
-//	            				"</html>");
-//	            	}
-	            	
-	            }
-	            
-	            	           
-//	            g2.setTransform(orig);
-//	            if(e.fromNode.getNodeName().startsWith("N") || e.fromNode.getNodeName().startsWith("List")){
-//	            	// System.err.println("-----------------");
-//	            	// System.err.println(distance);
-//	            	// System.err.println(e.fromNode.getNodeName());
-//		            // System.err.println(from);
+//		vv.getRenderer().setEdgeLabelRenderer(new BasicEdgeLabelRenderer<Node, Edge>() {
+//			@Override
+//			public void labelEdge(RenderContext<Node, Edge> rc, Layout<Node, Edge> layout, Edge e, String label) {
+//		        call(rc, layout, e, label, "fromLabel", 50);
+//		        call(rc, layout, e, label, "toLabel", 45);
+//		        
+//		    }
+//			
+//			private void call(RenderContext<Node, Edge> rc, Layout<Node, Edge> layout, Edge e, String label, String labelSide, int distDisplacement) {
+//				if(label == null || label.length() == 0) return;
+//		    	
+//		    	Graph<Node, Edge> graph = layout.getGraph();
+//		        // don't draw edge if either incident vertex is not drawn
+//		        Pair<Node> endpoints = graph.getEndpoints(e);
+//		        Node v1 = endpoints.getFirst();
+//		        Node v2 = endpoints.getSecond();
+//		        if (!rc.getEdgeIncludePredicate().evaluate(Context.<Graph<Node, Edge>,Edge>getInstance(graph,e)))
+//		            return;
+//
+//		        if (!rc.getVertexIncludePredicate().evaluate(Context.<Graph<Node, Edge>,Node>getInstance(graph,v1)) || 
+//		            !rc.getVertexIncludePredicate().evaluate(Context.<Graph<Node, Edge>,Node>getInstance(graph,v2)))
+//		            return;
+//
+//		        Point2D p1 = layout.transform(v1);
+//		        Point2D p2 = layout.transform(v2);
+//		        p1 = rc.getMultiLayerTransformer().transform(Layer.LAYOUT, p1);
+//		        p2 = rc.getMultiLayerTransformer().transform(Layer.LAYOUT, p2);
+//		        float x1 = (float) p1.getX();
+//		        float y1 = (float) p1.getY();
+//		        float x2 = (float) p2.getX();
+//		        float y2 = (float) p2.getY();
+//
+//		        GraphicsDecorator g = rc.getGraphicsContext();
+//		        float distX = x2 - x1;
+//		        float distY = y2 - y1;
+//		        double totalLength = Math.sqrt(distX * distX + distY * distY);
+//
+//		        double closeness = rc.getEdgeLabelClosenessTransformer().transform(Context.<Graph<Node,Edge>,Edge>getInstance(graph, e)).doubleValue();
+//		        
+////		        int posX = (int) (x1 + (closeness) * distX);
+////		        int posY = (int) (y1 + (closeness) * distY);
+//		        
+//		        Component component = prepareRenderer(rc, rc.getEdgeLabelRenderer(), labelSide, 
+//		                rc.getPickedEdgeState().isPicked(e), e);
+//
+//		        Dimension d = component.getPreferredSize();
+//		        
+//		        FontMetrics fm = vv.getFontMetrics(vv.getFont());
+////		        fm = rc.getGraphicsContext().getFontMetrics(rc.getGraphicsContext().getFont());
+//		        
+//		        float f = 0 ;
+//		        if(labelSide.equals("fromLabel")) {
+//		        	Node.TYPE type = v1.getType();
+//		        	String fromLabel = e.fromLabel.contains("_") ? e.fromLabel.split("_")[0] : e.fromLabel;
+//		        	
+//		        	float tunedOffset = 1.3f;
+//		        	if(type == Node.TYPE.Operator) {
+//		        		distDisplacement = (int) (fm.stringWidth(fromLabel) / 2 + arithmeticOpRadius * tunedOffset);
+//		        	}else if(type == Node.TYPE.Functor) {
+//		        		int width = fm.stringWidth(v1.getName().trim());
+//		        		int height = 0; 
+//		        				
+//		        		if(FunctorNode.isListPredicate(v1.getName().trim())) {
+//		        			width = GraphExtension.listPredicateWidth;
+//		        			height = GraphExtension.listPredicateHeight;
+//			        		
+//		        		}else {
+//		        			width = (int)(width * 0.8);
+//			        		if(width < 20) {
+//			        			width = 20;
+//			        		}else if(width > 25) {
+//			        			width *= 0.8;
+//			        		}
+//			        		width = width > 35 ? 35 : width;
+//			        		height = functorOpHeight;
+//		        		}
+////		        		
+////		        		distDisplacement = (int) (fm.stringWidth(fromLabel) / 2 + width + 8);
+////		        		
+//		        		float angle = getAngle(p2, p1);
+//		        		angle = angle > 180 ? angle - 180 : angle;
+//		        		
+//		        		if(angle >= 90) {
+//		        			float angleDiff = angle - 90;
+//		        			angle = 90 - angleDiff;		        			
+//		        		}
+//		        		
+//		        		float angle1 = getAngle(new Point((int)(p1.getX() - width / 2), (int)(p1.getY() - height / 2)), p1);
+//		        		
+//		        		if(0 <= angle && angle < angle1) {
+//		        			if(v1.getName().equals("roadroad") && v2.getName().equals("+")) {
+//		        				System.out.println("width: " + width);
+//		        				System.out.println("angle: " + getAngle(p2, p1));
+//		        				System.out.println("angle1: " + angle1);
+//		        				System.out.println("distDisplacement: " + (int) (width / 2 / Math.cos(Math.toRadians(angle))));
+//		        			}
+//		        			distDisplacement = (int) ((int) (width / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(fromLabel) / 2 );
+//		        		}else if(angle1 <= angle && angle <= 90) {
+//		        			angle = 90 - angle;
+//		        			distDisplacement = (int) ((int) (height / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(fromLabel) / 2 );
+////		        			distDisplacement = (int) (functorOpHeight / Math.cos(Math.toRadians(angle)));
+//		        			if((v1.getName().equals("roadroad") || v1.getName().equals("roadroadroadroad")) && v2.getName().equals("+")) {		        				
+//		        				System.out.println("between angle1 and 90");
+//		        				System.out.println("angle: " + angle);
+//		        				System.out.println("distDisplacement: " + distDisplacement);
+//		        			}
+//		        		}	        		
+//		        	}if(type == Node.TYPE.ListOperator) { //Done
+//		        		int width = listOpRadius;		        		        	
+//		        		
+//		        		float angle = getAngle(p2, p1);
+//		        		angle = angle > 180 ? angle - 180 : angle;
+//		        		
+//		        		if(angle >= 90) {
+//		        			float angleDiff = angle - 90;
+//		        			angle = 90 - angleDiff;		        			
+//		        		}
+//		        		
+//		        		float angle1 = getAngle(new Point((int)(p1.getX() - width / 2), (int)(p1.getY() - listOpRadius / 2)), p1);
+//		        		
+//		        		if(0 <= angle && angle < angle1) {
+//		        			distDisplacement = (int) ((int) (width / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(fromLabel) / 2 );
+//		        		}else if(angle1 <= angle && angle <= 90) {
+//		        			angle = 90 - angle;
+//		        			distDisplacement = (int) ((int) (listOpRadius / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(fromLabel) / 2 );
+//		        		}	        
+//		        	}
+//		        	
+//		        	f = (float) (distDisplacement / totalLength);
+//		        	
+//		        }else {
+//		        	Node.TYPE type = v2.getType();
+//		        	String toLabel = e.toLabel.contains("_") ? e.toLabel.split("_")[0] : e.toLabel;
+//		        	float tunedOffset = 1.4f;
+//		        	if(type == Node.TYPE.Operator) {
+//		        		distDisplacement = (int) (fm.stringWidth(toLabel) / 2 + arithmeticOpRadius * tunedOffset);
+//		        	}else if(type == Node.TYPE.Functor) {
+////		        		System.out.println(v2.getName());
+////		        		int width = fm.stringWidth(v2.getName().trim());		        		
+////		        		width = (int)(width * 0.8);
+////		        		if(width < 20) {
+////		        			width = 20;
+////		        		}else if(width > 25) {
+////		        			width *= 0.8;
+////		        		}
+////		        		
+////		        		distDisplacement = (int) (fm.stringWidth(e.toLabel) / 2 + width + 5);
+//		        		
+//		        		int width = fm.stringWidth(v2.getName().trim());	
+//		        		int height = 0; 
+//		        		
+//		        		
+//		        		
+//		        		if(FunctorNode.isListPredicate(v2.getName().trim())) {
+//		        			width = GraphExtension.listPredicateWidth;
+//		        			height = GraphExtension.listPredicateHeight;
+//		        			
+//		        		}else {
+//		        			width = (int)(width * 0.8);
+//			        		if(width < 20) {
+//			        			width = 20;
+//			        		}else if(width > 25) {
+//			        			width *= 0.8;
+//			        		}
+//			        		width = width > 35 ? 35 : width;
+//			        		height = functorOpHeight;
+//		        		}
+//		        		
+////		        		
+////		        		distDisplacement = (int) (fm.stringWidth(toLabel) / 2 + width + 8);
+//		        		
+//		        		float angle = getAngle(p1, p2);
+//		        		angle = angle > 180 ? angle - 180 : angle;
+//		        		
+//		        		if(angle >= 90) {
+//		        			float angleDiff = angle - 90;
+//		        			angle = 90 - angleDiff;		        			
+//		        		}
+//		        		
+//		        		float angle1 = getAngle(new Point((int)(p2.getX() - width / 2), (int)(p2.getY() - height / 2)), p2);
+//		        		
+//		        		if(0 <= angle && angle < angle1) {
+//		        			distDisplacement = (int) ((int) (width / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(toLabel) / 2 );
+//		        		}else if(angle1 <= angle && angle <= 90) {
+//		        			angle = 90 - angle;
+//		        			distDisplacement = (int) ((int) (height / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(toLabel) / 2 );
+//		        		}
+//		        	}else if(type == Node.TYPE.ListOperator) {
+//
+//		        		int width = listOpRadius;		        	
+//		        		
+//		        		float angle = getAngle(p1, p2);
+//		        		angle = angle >= 180 ? angle - 180 : angle;
+//		        		
+//		        		if(angle >= 90) {
+//		        			float angleDiff = angle - 90;
+//		        			angle = 90 - angleDiff;		        			
+//		        		}
+//		        		
+//		        		float angle1 = getAngle(new Point((int)(p2.getX() - width / 2), (int)(p2.getY() - listOpRadius / 2)), p2);
+//		        		
+//		        		if(0 <= angle && angle < angle1) {
+//		        			distDisplacement = (int) ((int) (width / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(toLabel) / 2 );
+//		        		}else if(angle1 <= angle && angle <= 90) {
+//		        			angle = 90 - angle;
+//		        			distDisplacement = (int) ((int) (listOpRadius / Math.cos(Math.toRadians(angle))) * 1.3 + fm.stringWidth(toLabel) / 2 );
+//		        		}
+//		        	}
+//		        	
+//		        	f = (float) ((totalLength - distDisplacement) / totalLength);
+//		        	
+//		        }
+//		        
+//				
+//		        int posX = (int) (x1 + distX * f);
+//		        int posY = (int) (y1 + distY * f);
+//		        
+//		        int xDisplacement = (int) (rc.getLabelOffset() * (distY / totalLength));
+//		        int yDisplacement = (int) (rc.getLabelOffset() * (-distX / totalLength));
+//
+//		        Shape edgeShape = rc.getEdgeShapeTransformer().transform(Context.<Graph<Node,Edge>,Edge>getInstance(graph, e));
+//		        
+//		        double parallelOffset = 1;
+//
+//		        parallelOffset += rc.getParallelEdgeIndexFunction().getIndex(graph, e);
+//
+//		        parallelOffset *= d.height;
+//		        if(edgeShape instanceof Ellipse2D) {
+//		            parallelOffset += edgeShape.getBounds().getHeight();
+//		            parallelOffset = -parallelOffset;
+//		        }
+//		        
+//		        AffineTransform old = g.getTransform();
+//		        AffineTransform xform = new AffineTransform(old);
+//		        xform.translate(posX + xDisplacement, posY + yDisplacement);
+////		        xform.translate(x1, y1);
+//		        double dx = x2 - x1;
+//		        double dy = y2 - y1;
+//		        if(rc.getEdgeLabelRenderer().isRotateEdgeLabels()) {
+//		            double theta = Math.atan2(dy, dx);
+//		            if(dx < 0) {
+//		                theta += Math.PI;
+//		            }
+//		            xform.rotate(theta);
+//		        }
+//		        if(dx < 0) {
+//		            parallelOffset = -parallelOffset;
+//		        }
+//		        
+//		        xform.translate(-d.width/2, -(d.height/2-parallelOffset));
+//		        
+//		        g.setTransform(xform);
+//		        g.draw(component, rc.getRendererPane(), 0, 0, d.width, d.height, true);
+//
+//		        g.setTransform(old);
+//			}
+//		});
+//	    
+//		DefaultEdgeLabelRenderer edgeLabelRenderer = new DefaultEdgeLabelRenderer(Color.black){
+//			
+//			@Override
+//	        public <E> Component getEdgeLabelRendererComponent(
+//	            JComponent vv, Object value, Font font, 
+//	            boolean isSelected, E edge) 
+//	        {
+//	            super.getEdgeLabelRendererComponent(
+//	                vv, value, font, isSelected, edge);
+////	            this.setForeground(Color.BLUE);	            
+//	            
+////	            VisualizationViewer vvv = ((VisualizationViewer)vv);
+////	            Layout<Node, Edge> layout = vvv.getGraphLayout();
+////	            Graph g = vvv.getGraphLayout().getGraph();
+////	            Object[] ee = g.getEdges().toArray();
+////	            Edge e = (Edge) ee[0];
+//	            
+//	            Edge e = (Edge) edge;
+//	            
+//	            if(value.toString().equals("fromLabel")) {
+//		        	String fromLabel = e.fromLabel.contains("_") ? e.fromLabel.split("_")[0] : e.fromLabel;
+//	            	this.setText(((Edge) edge).fromLabel);
+//	            }else if(value.toString().equals("toLabel")) {
+//		        	String toLabel = e.toLabel.contains("_") ? e.toLabel.split("_")[0] : e.toLabel;
+//	            	this.setText(toLabel);
+////	            	this.setText("toLabel");
+//	            }else {
+//	            	System.err.println("edge label not recognised");
 //	            }
 //	            
-	            
-//	            if(n.isMainArg){
-//	            	this.setText(n.mainArgNo + ". " + this.getText());
-//	            }
-	            
-//	            if(n.getNodeType() == Node.TYPE.Functor){
-//	            	this.setText(this.getText() + "()");
-//	            }
-//	            
-//	            if(!n.isMainArg && n.getNodeType() == Node.TYPE.Variable){
-//	            	this.setText("<html><br>" + this.getText() + "</html>");
-//	            }
-	            
-//	            this.setText("ariel");
-	            
-	            
-	            
-//	            vv.getGraphics().setColor(Color.blue);
-//	            vv.getGraphics().fillRect(this.getX(), this.getY(), 10, 10);	           
-	            
-	            return this;
-	        }
-	        
-	    };
-	    
-		
-//		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<Edge, String>() {
-//            public String transform(Edge e) {
-////            	if(e.startsWith("head") || e.startsWith("tail")){ //Lists
-////            		return e.replaceAll("\\d","");            
-////            	}else if(e.startsWith("arg") || e.startsWith("op") || e.startsWith("left") || e.startsWith("right") || e.startsWith("element") || e.startsWith("set") || e.startsWith("is")){ //Functions or operators
-////            		if(e.split("_")[1].startsWith("fromFunctor")){
-////            			return "";
-////            		}else{
-////            			return e.split("_")[0];
-////            		}
-////            	}else if(e.startsWith("clauseHeadListArg")){
-////            		return "";
-////            	}else{ //Just variables
-////            		return e;
-////            	}
-//            	if(e.toLabel.startsWith("Out_")){
-//            		return "Out_" + e.toLabel.split("_")[1];
-//            	}else if(!e.fromLabel.equals("")){
-//            		return e.fromLabel;
-//            	}else{
-////            		return e.toLabel.split("_")[0];
-//            		return e.toLabel;
-//            	}
-//            }
-//        });
-					
-		
-		
+//	            return this;
+//	        }
+//	        
+//	       
+//	        
+//	    };
+			
+	   
 	    DefaultVertexLabelRenderer vertexLabelRenderer = new DefaultVertexLabelRenderer(Color.black){
 	        @Override
 	        public <V> Component getVertexLabelRendererComponent(
@@ -341,8 +422,35 @@ public class GraphExtension {
 //	            	this.setText(this.getText() + "()");
 //	            }
 //	            
-	            if(!n.isMainArg && n.getType() == Node.TYPE.Variable){
-	            	this.setText("<html><br>" + this.getText() + "</html>");
+	            if(n.getType() == Node.TYPE.Functor && !FunctorNode.isListPredicate(n.getName())) {
+
+	        		FontMetrics fm = vv.getFontMetrics(vv.getFont());
+	        		int width = fm.stringWidth(n.getName().trim());
+	        		
+	        		width = (int)(width * 0.8);
+	        		if(width < 20) {
+	        			width = 20;
+	        		}else if(width > 25) {
+	        			width *= 0.8;
+	        		}
+	        		
+	        		String text = this.getText();
+	        		
+	        		if(width > 35) {
+	        			width = 35;
+	        			int charWidth = fm.stringWidth(n.getName().trim()) / n.getName().length();
+	        			int chars = width / charWidth;
+	        			text = this.getText().substring(0, chars) + "...";
+	        		}
+	        		
+//	        		this.setText("<html><br>" + n.getName().trim() + "</html>");
+	        		this.setText(text);
+	        		
+	            }
+	            else { 
+	            	if(!n.isMainArg && n.getType() == Node.TYPE.Variable){
+	            		this.setText("<html><br>" + this.getText() + "</html>");
+	            	}
 	            }
 	            
 //	            vv.getGraphics().setColor(Color.blue);
@@ -363,36 +471,49 @@ public class GraphExtension {
 	    
 	    Transformer<Node,Shape> vertexShape = new Transformer<Node, Shape>(){
 	        public Shape transform(Node i){
-	        	// System.out.println(i.getType());
 	        	Shape shape = null;
-	        	Node.TYPE nodeType = i.getType();   
+	        	Node.TYPE nodeType = i.getType();
 	        	
 	        	
-	        	if(i.isMainArg){
-	        		int radius = 30;
-	        		shape = new Ellipse2D.Double(-15, -15, radius, radius);
+	        	if(i.isMainArg){	        	
+	        		shape = new Ellipse2D.Double(-mainArgRadius/2, -mainArgRadius/2, mainArgRadius, mainArgRadius);
 	        	}else if(nodeType == Node.TYPE.ListOperator){
-	        		shape = new Rectangle(-15, -15, 22, 22);
+	        		shape = new Rectangle(-listOpRadius/2, -listOpRadius/2, listOpRadius, listOpRadius);
 	        	}else if(nodeType == Node.TYPE.Functor){
 	//        		shape = new Rectangle(-15, -15, 20, 20);
-	        		int width = (i.getName().length() < 5) ? 5 : i.getName().length(); // so the node doesn't look too small.        		
-	        		width = width > 10 ? 10 : width; //enforce max rectangle width.
+//	        		int width = (i.getName().length() < 5) ? 5 : i.getName().length(); // so the node doesn't look too small.        		
+//	        		width = width > 10 ? 10 : width; //enforce max rectangle width.
 	        		
-	        		width = (int)(width * 4.5);
-	        		width += 3; //for the extra "()" 
-	        		width += i.isMainArg ? 3: 0; //for the extra arg number at the start.
+	        		FontMetrics fm = vv.getFontMetrics(vv.getFont());
+	        		int width = fm.stringWidth(i.getName().trim());
+	        		
+	        		width = (int)(width * 0.8);
+	        		if(width < 20) {
+	        			width = 20;
+	        		}else if(width > 25) {
+	        			width *= 0.8;
+	        		}
+	        		
+	        		
+	        		width = width > 35 ? 35 : width;
+	        		
+//	        		width = (int)(width * 4.5);
+//	        		width += 3; //for the extra "()" 
+//	        		width += i.isMainArg ? 3: 0; //for the extra arg number at the start.
 	        		
 	        		if(FunctorNode.isListPredicate(i.getName())){
-	        			shape = new Rectangle(-15, -15, width, 25);
+//	        			shape = new Rectangle(-15, -15, 30, 25);
+	        			shape = new Rectangle(-listPredicateWidth/2, -listPredicateHeight/2, listPredicateWidth, listPredicateHeight);
 	        		}else{
-	        			shape = new Rectangle(-15, -15, width, 20);
+//	        			shape = new Rectangle(-15, -15, width, functorNodeHeight);
+	        			shape = new Rectangle(-width/2, -functorOpHeight/2, width, functorOpHeight);
 	        		}
 	        		
 	        	}else if(nodeType == Node.TYPE.Operator){
-	        		shape = new Rectangle(-15, -15, 20, 20);
+	        		shape = new Rectangle(-arithmeticOpRadius/2, -arithmeticOpRadius/2, arithmeticOpRadius, arithmeticOpRadius);
 	        	}else if(nodeType == Node.TYPE.Variable){
 	        		if(i.getFromNodeCount() + i.getToNodeCount() >= 3){ // A variable in a Junction.
-	        			shape = new Ellipse2D.Double(-2.5, -2.5, 5, 5);	   	        			
+	        			shape = new Ellipse2D.Double(-variableRadius/2, -variableRadius/2, variableRadius, variableRadius);	   	        			
 	        		}else {
 	        			final GeneralPath p0 = new GeneralPath();
 						int sizeFactor = 10;
@@ -411,7 +532,7 @@ public class GraphExtension {
 					p0.closePath();
 	        		shape = p0;
         		}else{
-	        		shape = new Ellipse2D.Double(-15, -15, 20, 20);
+	        		shape = new Ellipse2D.Double(-10, -10, 20, 20);
 	        	}
 	        	
 	            // in this case, the vertex is twice as large
@@ -448,8 +569,8 @@ public class GraphExtension {
 			                
 			                @Override
 			                public void paintIcon(Component c, Graphics g, int x, int y) {
-			                	int offset = 6;
-			                    g.drawImage(icon.getImage(), x - offset, y - offset - 3, getIconWidth(), getIconHeight(), null);
+			                	int offset =0;
+			                    g.drawImage(icon.getImage(), x - offset, y - offset - 2, getIconWidth(), getIconHeight(), null);
 			                }
 			            };
 			            
@@ -472,7 +593,7 @@ public class GraphExtension {
 				                	return 61;
 				                }
 				                
-				                int offset = 6;
+				                int offset = 0;
 				                public void paintIcon(Component c, Graphics g, int x, int y) {
 				                    g.drawImage(icon.getImage(), x , y - offset, getIconWidth(), getIconHeight(), null);
 				                }
@@ -512,14 +633,40 @@ public class GraphExtension {
 			}
         });
 	    
+	    
+	    Transformer<Context<Graph<Node,Edge>,Edge>, Shape> edgeShapeTransformer = new Transformer<Context<Graph<Node,Edge>,Edge>, Shape>(){
 
-		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
+			@Override
+			public Shape transform(Context<Graph<Node, Edge>, Edge> context) {
+				// TODO Auto-generated method stub
+//				Line<Node, Edge> e = new EdgeShape.Line<Node, Edge>();
+				
+//				if(!vertical(layout, context.element) && !horizontal(layout, context.element)) {
+//					
+//					AbstractEdgeShapeTransformer<Node, Edge> e = new AbstractEdgeShapeTransformer<Node, Edge>(){
+//						@Override
+//						public Shape transform(Context<Graph<Node, Edge>, Edge> arg0) {
+//							// draw orthogonal edges
+//							return new Rectangle();
+//						}
+//						
+//					};
+//					return (e).transform(context);
+//				}
+					
+				return (new EdgeShape.Line<Node, Edge>()).transform(context);
+			}
+	    };
+	    
+//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line<Node, Edge>());
 //		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.CubicCurve<Node, Edge>());
-//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<Node, Edge>());		
+//		vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.BentLine<Node, Edge>());
+	    vv.getRenderContext().setEdgeShapeTransformer(edgeShapeTransformer);
+//	    vv.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Orthogonal<Node, Edge>());
 //		vv.getRenderContext().setEdgeStrokeTransformer(edgeStrokeTransformer);
-		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
-//
-		vv.getRenderContext().setEdgeLabelRenderer(edgeLabelRenderer);
+	    
+//		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+//		vv.getRenderContext().setEdgeLabelRenderer(edgeLabelRenderer);
 //		vv.getRenderContext().setLabelOffset(-5);
 		 
 		vv.getRenderContext().setEdgeArrowTransformer(new DirectionalEdgeArrowTransformer<Node, Edge>(5, 5, 0));
@@ -535,15 +682,25 @@ public class GraphExtension {
 	}
 	
 	
+		
+	
+	public static float getAngle(Point2D source, Point2D target) {
+		float angle = (float) Math.toDegrees(Math.atan2(target.getY() - source.getY(), target.getX() - source.getX()));
+		
+		if(angle < 0){
+			angle += 360;
+		}
+		
+		return angle;
+	}
+	
+
+	
 	static class MyRenderer implements Renderer.EdgeLabel<Node, Edge>{
 
 		@Override
 		public void labelEdge(RenderContext<Node, Edge> context, Layout<Node, Edge> layout, Edge edge, String label) {
 			// TODO Auto-generated method stub
-			// System.out.println("label ---> " + label);
-			// System.out.println(edge);
-			
-			
 		}
 		
 	}
@@ -554,6 +711,22 @@ public class GraphExtension {
 			space += "&nbsp;";
 		}
 		return space;
+	}
+	
+	public static boolean vertical(Layout<Node, Edge> layout, Edge e) {
+		if(Math.abs(layout.transform(e.fromNode).getX() -layout.transform(e.toNode).getX()) < 10) {
+			return true;
+		}else {
+			return false;
+		}		
+	}
+	
+	public static boolean horizontal(Layout<Node, Edge> layout, Edge e) {
+		if(Math.abs(layout.transform(e.fromNode).getY() -layout.transform(e.toNode).getY()) < 10) {
+			return true;
+		}else {
+			return false;
+		}
 	}
 
 }

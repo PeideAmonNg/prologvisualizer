@@ -423,9 +423,12 @@ public class ParserProcess {
 //									n.addToNode(edgeLabel + "_" + (index+1), fNode);
 									n.addToNode("" + "_" + (index+1), fNode);
 									
-//									if(n.getType() == Node.TYPE.ListOperator) {
-//										edgeLabel = "list";
-//									}
+									if(n.getType() == Node.TYPE.ListOperator) {
+										edgeLabel = "list";
+										fNode.getFromNodeEdge(n).fromLabel = "list";
+										n.getToNodeEdge(fNode).fromLabel = "list";
+										
+									}
 									
 									
 									String roleName = getRoleName(((PrologStructure) term).getFunctor().getText(), ((PrologStructure) term).getArity(), index);

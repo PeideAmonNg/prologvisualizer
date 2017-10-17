@@ -29,4 +29,8 @@ public class VariableNode extends Node {
 		
 		return Color.white;
 	}
+	
+	public boolean isJunctionVariable() {
+		return getInEdges().size() + getOutEdges().size() >= 3;
+	}
 }

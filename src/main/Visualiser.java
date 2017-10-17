@@ -91,7 +91,6 @@ public class Visualiser implements ActionListener  {
 				topPanel.add(directedEdgeEnabled);
 				
 				fieldPanel.add(topPanel);
-//				fieldPanel.add(metaClauseField);
 				fieldPanel.add(clauseField);
 		
 				
