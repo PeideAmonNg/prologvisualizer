@@ -1,0 +1,25 @@
+digraph G {
+a -> b -> c;
+e -> d -> c;
+b -> f -> g -> c;
+f -> h -> i -> c;
+h -> j -> c;
+d -> h;
+k -> g;
+l -> i;
+m -> j;
+
+ranksep=2.5;
+mindist=1.5;
+
+a [shape=square,style=filled,label="List2"];
+b [shape=square,color=red,style=filled,label="listProc"];
+c [shape=square,color=lightblue, style=filled,label="queens"]
+d [shape=square,color=red,style=filled,label="listProc"];
+e [shape=polygon,sides=4,distortion=.7,label="List1"];
+f [shape=circle,style=filled, color=yellow,label="Col"]
+g [shape=square,style=filled, color=lightblue,label="pick"]
+h [shape=square,style=filled, color=lightblue,label="match"]
+i [shape=square,style=filled, color=lightblue,label="pick"]
+j [shape=square,style=filled, color=lightblue,label="pick"]
+}

@@ -1,0 +1,28 @@
+digraph G {
+i_visited -> h_set;
+i_visited -> b_list;
+j_path -> c_route;
+k_finish -> c_route;
+a_start -> b_list -> c_route;
+c_route -> d_add;
+d_add -> e_distance;
+a_start -> f_road -> g_end -> c_route;
+f_road -> d_add;
+g_end -> h_set ;
+
+
+ranksep=1.5;
+mindist=1.5;
+
+a_start [shape=circle,label="start"];
+b_list [shape=square,color=red,style=filled,label="listProc"];
+c_route [shape=square,color=lightblue, style=filled,label="route"]
+d_add [shape=square,color=yellow,style=filled,label="+"];
+e_distance [shape=circle,sides=4,distortion=.7,label="distance"];
+f_road [shape=square,style=filled, color=lightblue,label="road"]
+g_end [shape=circle,fixedsize=shape,width=0.1,height=0.1,label="        end"]
+h_set [shape=square,style=filled, color=lightblue,label="set"]
+i_visited [shape=circle,label="visited"]
+j_path [shape=circle, label="path"]
+k_finish [shape=circle,label="finish"]
+}

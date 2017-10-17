@@ -101,7 +101,7 @@ class GVLoader {
     void openDOTFile(File f, final short prg, final boolean parser){
         final SwingWorker worker=new SwingWorker(){
             public Object construct(){
-            grMngr.reset();
+            grMngr.reset();	
             loadFile(f, prg, parser);
             return null;
             }

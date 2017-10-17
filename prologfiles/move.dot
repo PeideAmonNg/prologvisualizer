@@ -1,0 +1,36 @@
+digraph G {
+a -> b;
+a -> c;
+d -> c;
+e -> b;
+b -> f;
+f -> g;
+f -> h;
+i -> g;
+i -> h;
+j -> g;
+j -> h;
+j -> k;
+l -> h;
+l -> k;
+m -> k;
+n -> k;
+
+ranksep=1.5;
+mindist=1.5;
+
+a [shape=circle,style=filled,label="N",width=0.7,height=0.7,fixedsize=shape,image="mainArgArrows.png",imagescale="false"];
+b [shape=square,color=red,style=filled,label="-"];
+c [shape=square,color=lightblue, style=filled,label=">"]
+d [shape=triangle,color=red,style=filled,label="1"];
+e [shape=triangle,color=red,style=filled,label="1"];
+f [shape=circle,style=filled, color=yellow,label="M"]
+g [shape=square,style=filled, color=lightblue,label="move"]
+h [shape=square,style=filled, color=lightblue,label=move]
+i [shape=circle,style=filled, color=lightblue,label="Z",width=0.7,height=0.7,fixedsize=shape,image="mainArgArrows.png",imagescale="false"]
+j [shape=circle,style=filled, color=lightblue,label="X",width=0.7,height=0.7,fixedsize=shape,image="mainArgArrows.png",imagescale="false"]
+k [shape=square,style=filled, color=lightblue,label="move"]
+l [shape=circle,style=filled, color=lightblue,label="Y"]
+m [shape=triangle,color=red,style=filled,label="1"];
+n [shape=triangle,color=red,style=filled,label="_"];
+}
